@@ -1,0 +1,56 @@
+# =============================================================================
+# Default Filter Configuration
+# =============================================================================
+# This file defines the 4-step filtering pipeline that applies to all accounts
+# unless overridden in a per-account filter file.
+#
+# Pipeline order (first match wins — email stops at the step that filters it):
+#   Step 1: Address rules   — forward emails from specific senders to folders
+#   Step 2: Keyword rules   — match subject/sender against keyword patterns
+#   Step 3: AI scoring      — openclaw agent scores email against folder definitions
+#   Step 4: Fallback        — move unmatched emails to the Review folder
+#
+# See specs/ARCHITECTURE.md for full pipeline documentation.
+# =============================================================================
+
+# Minimum AI score (0.0–1.0) for Step 3 to auto-file an email.
+ai_score_threshold: 0.8
+
+# Folder used when no step can classify the email.
+review_folder: "Review"
+
+# Step 1: Address-based rules (sender → folder). Checked first.
+address_rules: []
+  # Example:
+  # - sender: "boss@company.com"
+  #   folder: "Executive"
+  # - sender: "@notifications.github.com"
+  #   folder: "GitHub"
+
+# Step 2: Keyword-based rules (regex pattern → folder).
+keyword_rules:
+  - pattern: "(newsletter|marketing|digest|no-reply|noreply|promotions|linkedin)"
+    folder: "Newsletters"
+    confidence: 0.95
+  - pattern: "(invoice|receipt|payment|bill|rechnung|fatura)"
+    folder: "Finance"
+    confidence: 0.90
+  - pattern: "(security|alert|verify|login|auth)"
+    folder: "Security"
+    confidence: 0.95
+  - pattern: "(amazon|paypal|delivery|shop|tracking|dhl|ups)"
+    folder: "Shopping"
+    confidence: 0.85
+  - pattern: "(flight|hotel|booking|airbnb|train|bahn|travel)"
+    folder: "Travel"
+    confidence: 0.85
+
+# Step 3: Folder definitions for AI scoring.
+# The openclaw agent matches email content against these descriptions.
+folder_definitions:
+  Archive: "Old emails, read and no longer actionable"
+  Finance: "Banking, invoices, payments, receipts"
+  Newsletters: "Marketing emails, subscriptions, digests"
+  Security: "Security alerts, verification codes, login notifications"
+  Shopping: "Online orders, delivery tracking, e-commerce"
+  Travel: "Flight bookings, hotel reservations, travel itineraries"

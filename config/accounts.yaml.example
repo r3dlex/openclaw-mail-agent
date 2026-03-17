@@ -1,0 +1,72 @@
+# =============================================================================
+# Account Definitions — EXAMPLE
+# =============================================================================
+# Copy this file to accounts.yaml and fill in your real account details.
+# NEVER commit accounts.yaml to version control.
+#
+# User email and password are resolved from environment variables (.env).
+# Each account has a unique `id` used to load its filter config from
+# config/filters/<id>.yaml
+#
+# Fields:
+#   id            — unique identifier (used for filter/folder_mapping file names)
+#   nickname      — short human-friendly alias (the agent uses this or the id)
+#   himalaya_name — name in himalaya CLI config
+#   name          — full display name (for reports)
+#   provider      — "davmail" or "gmail"
+#   user_env      — env var holding the email address
+#   password_env  — env var holding the password / app token
+#   role          — "work", "personal", "system", "gaming"
+#   active        — whether to process this account
+#   calendar      — optional calendar sync credentials
+# =============================================================================
+
+defaults:
+  gmail_host: "imap.gmail.com"
+  gmail_port: 993
+  davmail_host: "localhost"
+  davmail_port: 1143
+
+accounts:
+  # --- WORK (Exchange via DavMail bridge) ---
+  - id: "work_main"
+    nickname: "work"
+    himalaya_name: "Work"
+    name: "Work Account"
+    provider: "davmail"
+    user_env: "USER_WORK"
+    password_env: "PASS_WORK"
+    role: "work"
+    active: true
+    unread_only: true
+    calendar:
+      provider: "caldav"
+      url_env: "CALDAV_WORK_URL"
+      user_env: "USER_WORK"
+      password_env: "PASS_WORK"
+
+  # --- PERSONAL (Gmail) ---
+  - id: "personal_main"
+    nickname: "personal"
+    himalaya_name: "Personal"
+    name: "Personal Gmail"
+    provider: "gmail"
+    user_env: "USER_PERSONAL"
+    password_env: "PASS_PERSONAL"
+    role: "personal"
+    active: true
+    calendar:
+      provider: "google"
+      client_secrets_env: "GOOGLE_CLIENT_SECRETS_FILE"
+      token_env: "GOOGLE_TOKEN_FILE"
+
+  # --- SECONDARY (Gmail) ---
+  - id: "secondary"
+    nickname: "secondary"
+    himalaya_name: "Secondary"
+    name: "Secondary Account"
+    provider: "gmail"
+    user_env: "USER_SECONDARY"
+    password_env: "PASS_SECONDARY"
+    role: "personal"
+    active: false

@@ -1,0 +1,17 @@
+# =============================================================================
+# Openclaw Mail Agent — Cron Schedule (EXAMPLE)
+# =============================================================================
+# For Docker: docker compose up cron (uses this automatically)
+# For local:  Copy to crontab and install with: crontab cron/crontab
+#
+# Adjust paths and schedule to your needs.
+# =============================================================================
+
+# Email tidy — every 30 minutes
+30 * * * * cd /app && python -m openclaw_mail.cli tidy >> /app/logs/tidy_cron.log 2>&1
+
+# Morning digest — 8 AM
+0 8 * * * cd /app && python -m openclaw_mail.cli digest >> /app/logs/digest_cron.log 2>&1
+
+# Evening digest — 5 PM
+0 17 * * * cd /app && python -m openclaw_mail.cli digest >> /app/logs/digest_cron.log 2>&1

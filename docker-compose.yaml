@@ -1,0 +1,55 @@
+# =============================================================================
+# Openclaw Mail Agent — Docker Compose
+# =============================================================================
+# Zero-install: `docker compose up mail-tidy`
+# =============================================================================
+
+services:
+  # One-shot email tidy
+  mail-tidy:
+    build: .
+    env_file: .env
+    volumes:
+      - ./config:/app/config:ro
+      - ./logs:/app/logs
+      - ./reports:/app/reports
+    command: ["tidy"]
+
+  # One-shot digest generation
+  mail-digest:
+    build: .
+    env_file: .env
+    volumes:
+      - ./config:/app/config:ro
+      - ./logs:/app/logs
+      - ./reports:/app/reports
+    command: ["digest"]
+
+  # Cron scheduler — runs tidy every 30min and digest at 8am/5pm
+  cron:
+    build: .
+    env_file: .env
+    volumes:
+      - ./config:/app/config:ro
+      - ./logs:/app/logs
+      - ./reports:/app/reports
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo '30 * * * * cd /app && python -m openclaw_mail.cli tidy >> /app/logs/tidy_cron.log 2>&1' > /etc/cron.d/mail-agent
+        echo '0 8 * * * cd /app && python -m openclaw_mail.cli digest >> /app/logs/digest_cron.log 2>&1' >> /etc/cron.d/mail-agent
+        echo '0 17 * * * cd /app && python -m openclaw_mail.cli digest >> /app/logs/digest_cron.log 2>&1' >> /etc/cron.d/mail-agent
+        chmod 0644 /etc/cron.d/mail-agent
+        crontab /etc/cron.d/mail-agent
+        echo "Cron jobs installed. Starting cron daemon..."
+        cron -f
+
+  # Run tests
+  test:
+    build: .
+    volumes:
+      - ./tests:/app/tests:ro
+      - ./openclaw_mail:/app/openclaw_mail:ro
+      - ./config:/app/config:ro
+    entrypoint: ["python", "-m", "pytest"]
+    command: ["-v", "--tb=short"]

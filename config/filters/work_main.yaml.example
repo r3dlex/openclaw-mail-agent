@@ -1,0 +1,30 @@
+# =============================================================================
+# Work Account — Filter Configuration (EXAMPLE)
+# =============================================================================
+# Copy to <account_id>.yaml and customize for your work account.
+# See specs/ARCHITECTURE.md for full pipeline documentation.
+# =============================================================================
+
+ai_score_threshold: 0.8
+review_folder: "Review"
+
+# Step 1: Address-based rules — emails from specific senders to folders
+address_rules:
+  - sender: "ceo@company.com"
+    folder: "Executive"
+  # - sender: "@notifications.github.com"
+  #   folder: "GitHub"
+
+# Step 2: Keyword-based rules — regex patterns on subject+sender
+keyword_rules:
+  - pattern: "(newsletter|marketing|digest|noreply)"
+    folder: "Newsletters"
+    confidence: 0.95
+  - pattern: "(invoice|receipt|payment|bill)"
+    folder: "Finance"
+    confidence: 0.90
+
+# Step 3: Folder definitions for AI scoring
+folder_definitions:
+  Finance: "Invoices, billing, expense reports"
+  Newsletters: "Marketing, subscriptions, company digests"

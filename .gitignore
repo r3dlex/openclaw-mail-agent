@@ -205,3 +205,51 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# ============================================
+# Project-specific ignores
+# ============================================
+
+# Secrets & credentials (NEVER commit these)
+.env
+.env.*
+!.env.example
+**/client_secret*.json
+**/token*.json
+**/credentials*.json
+**/oauth*.json
+
+# Accounts config (contains real email addresses)
+config/accounts.yaml
+!config/accounts.yaml.example
+
+# Per-account filter configs (may contain real names/addresses)
+config/filters/*.yaml
+!config/filters/_default.yaml
+!config/filters/*.yaml.example
+
+# Folder mappings (account-specific, may contain PII)
+config/folder_mappings/*.md
+!config/folder_mappings/_example.md
+
+# Openclaw workspace state
+.openclaw/
+
+# Agent memory (runtime, may contain sensitive info)
+memory/
+MEMORY.md
+
+# Reports & logs (generated at runtime)
+reports/
+logs/
+
+# Legacy artifacts directory (migrated to src/openclaw_mail/)
+# Contains hardcoded paths and email addresses — do not commit
+artifacts/
+
+# Approved PRs list (runtime state)
+approved_prs.txt
+
+# OS files
+.DS_Store
+Thumbs.db

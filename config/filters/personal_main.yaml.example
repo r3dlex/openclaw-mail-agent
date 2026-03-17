@@ -1,0 +1,23 @@
+# =============================================================================
+# Personal Account — Filter Configuration (EXAMPLE)
+# =============================================================================
+# Copy to <account_id>.yaml and customize for your personal account.
+# See specs/ARCHITECTURE.md for full pipeline documentation.
+# =============================================================================
+
+ai_score_threshold: 0.8
+review_folder: "Review"
+
+address_rules: []
+
+keyword_rules:
+  - pattern: "(newsletter|marketing|noreply|promotions)"
+    folder: "Newsletters"
+    confidence: 0.95
+  - pattern: "(invoice|receipt|payment|bill)"
+    folder: "Finance"
+    confidence: 0.90
+
+folder_definitions:
+  Finance: "Banking, invoices, payments"
+  Newsletters: "Marketing emails, subscriptions"
