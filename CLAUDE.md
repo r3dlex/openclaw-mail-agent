@@ -33,12 +33,15 @@ docker compose run test
 ├── TOOLS.md               ← Environment-specific notes
 │
 ├── openclaw_mail/         ← Python package (root-level)
-│   ├── cli.py             ← CLI entrypoints
+│   ├── cli.py             ← CLI entrypoints (tidy, digest, validate)
 │   ├── config.py          ← Centralized config loader
 │   ├── tidy.py            ← Main tidy engine + reporting
 │   ├── digest.py          ← Daily digest generator
 │   ├── filters/           ← 4-step filtering pipeline
 │   │   └── pipeline.py    ← FilterPipeline, FilterResult, Email
+│   ├── pipelines/         ← Generic pipeline runner framework
+│   │   ├── runner.py      ← Pipeline, PipelineStep, StepResult
+│   │   └── validation.py  ← CI validation (ADR, secrets, gitignore)
 │   ├── utils/             ← Shared utilities
 │   │   ├── himalaya.py    ← Himalaya CLI wrapper
 │   │   └── logging.py     ← Centralized logging
@@ -55,13 +58,19 @@ docker compose run test
 │   └── folder_mappings/   ← Per-account folder docs (gitignored)
 │       └── _example.md    ← Template (committed)
 │
-├── tests/                 ← Unit & integration tests
-├── spec/                 ← Architecture & design docs
+├── tests/                 ← Unit & integration tests (83 tests)
+├── spec/                  ← Architecture & design docs
 │   ├── ARCHITECTURE.md    ← System design & pipeline docs
+│   ├── PIPELINES.md       ← Pipeline runner, ADRs, CI integration
 │   ├── TESTING.md         ← Testing strategy
 │   ├── TROUBLESHOOTING.md ← Common issues & fixes
-│   └── LEARNINGS.md       ← Agent operational learnings
+│   ├── LEARNINGS.md       ← Agent operational learnings
+│   └── adrs/              ← Architecture Decision Records
+│       ├── ARCH-NNN-*.md      ← Decision documents
+│       └── ARCH-NNN-*.check.py ← Machine-executable validation
 │
+├── .github/workflows/     ← GitHub Actions CI
+│   └── ci.yml             ← Lint + test + validate
 ├── cron/                  ← Cron schedule templates
 │   └── crontab.example    ← Example crontab
 ├── Dockerfile             ← Container build
@@ -90,6 +99,19 @@ docker compose run test
 5. **Sensitive data separation**: Real account configs (`accounts.yaml`,
    per-account filters, folder mappings) are gitignored. Only `_default.yaml`,
    `.example` files, and templates are committed.
+
+6. **Generic pipeline runner**: `openclaw_mail/pipelines/` provides reusable
+   `Pipeline`/`PipelineStep`/`StepResult` abstractions. Used for both email
+   filtering (`first_match`) and CI validation (`sequential`).
+   → `spec/PIPELINES.md`
+
+7. **ADR system**: Architecture Decision Records in `spec/adrs/` with
+   `.md` decision docs and `.check.py` machine-executable validation.
+   CI runs all checks automatically via `poetry run validate`.
+   → `spec/adrs/`
+
+8. **GitHub Actions CI**: Lint + test + validate on every push/PR.
+   → `.github/workflows/ci.yml`
 
 ## Working with the Code
 

@@ -86,18 +86,36 @@ Credentials live in `.env` (never committed). See `.env.example` for the templat
 
 ```
 openclaw_mail/              # Python package (root-level)
-├── cli.py                  # CLI entrypoints (mail-tidy, mail-digest)
+├── cli.py                  # CLI entrypoints (tidy, digest, validate)
 ├── config.py               # Config loader (.env + YAML)
 ├── tidy.py                 # Tidy engine + report generation
 ├── digest.py               # Digest generator
 ├── filters/pipeline.py     # 4-step filtering pipeline
+├── pipelines/              # Generic pipeline runner framework
+│   ├── runner.py           # Pipeline, PipelineStep, StepResult
+│   └── validation.py       # CI validation (ADR, secrets scan)
 └── utils/                  # Himalaya wrapper, logging
 
 config/                     # All configuration (YAML, gitignored secrets)
-spec/                      # Architecture & design docs
-tests/                      # Unit & integration tests
+spec/                       # Architecture & design docs
+spec/adrs/                  # Architecture Decision Records
+tests/                      # Unit & integration tests (83 tests)
+.github/workflows/          # GitHub Actions CI
 cron/                       # Cron schedule templates
 ```
+
+## CI Pipeline
+
+GitHub Actions runs automatically on push/PR to `main`:
+
+```bash
+# Same checks run locally:
+poetry run ruff check openclaw_mail/ tests/         # lint
+poetry run pytest -v --cov=openclaw_mail             # test
+poetry run validate                                  # ADR + secret scan
+```
+
+→ Full CI details: `spec/PIPELINES.md`
 
 ## Documentation
 
@@ -107,6 +125,7 @@ cron/                       # Cron schedule templates
 | `CLAUDE.md` | Developer agents | How to work on this codebase |
 | `AGENTS.md` | Openclaw agent | Operating procedures for the mail agent |
 | `spec/ARCHITECTURE.md` | Deep dive | System design, pipeline, infrastructure |
+| `spec/PIPELINES.md` | Deep dive | Pipeline runner, ADRs, CI integration |
 | `spec/TESTING.md` | Contributors | Testing strategy & running tests |
 | `spec/TROUBLESHOOTING.md` | Operations | Common issues & fixes |
 | `spec/LEARNINGS.md` | Openclaw agent | Operational learnings & patterns |

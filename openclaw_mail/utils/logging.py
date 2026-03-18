@@ -2,7 +2,6 @@
 
 import logging
 import sys
-from pathlib import Path
 
 from openclaw_mail.config import LOG_DIR, LOG_LEVEL
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 from openclaw_mail.utils.himalaya import (
     DAVMAIL_TIMEOUT_MULTIPLIER,

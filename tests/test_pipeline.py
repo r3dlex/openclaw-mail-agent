@@ -1,8 +1,7 @@
 """Tests for the 4-step email filtering pipeline."""
 
-import pytest
 
-from openclaw_mail.filters.pipeline import Email, FilterConfig, FilterPipeline, FilterResult
+from openclaw_mail.filters.pipeline import Email, FilterConfig, FilterPipeline
 
 
 class TestStep1AddressRules:

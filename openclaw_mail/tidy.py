@@ -8,8 +8,7 @@ Generates a full report of all mailboxes and emails filtered, including:
 
 from __future__ import annotations
 
-import json
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from pathlib import Path
 
 from openclaw_mail.config import REPORT_DIR, get_active_accounts, load_filter_config

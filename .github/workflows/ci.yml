@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install --no-interaction
+      - name: Run ruff
+        run: poetry run ruff check openclaw_mail/ tests/
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install --no-interaction
+      - name: Run pytest
+        run: poetry run pytest -v --tb=short
+      - name: Run pytest with coverage
+        run: poetry run pytest --cov=openclaw_mail --cov-report=term-missing --cov-fail-under=70
+
+  validate:
+    name: Validate (ADR + Sensitive Data)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          pip install poetry
+          poetry install --no-interaction
+      - name: Run validation pipeline
+        run: poetry run validate
+      - name: Verify no sensitive files tracked
+        run: |
+          echo "Checking for sensitive files in git..."
+          SENSITIVE=$(git ls-files --cached | grep -E '(^\.env$|^config/accounts\.yaml$)' || true)
+          if [ -n "$SENSITIVE" ]; then
+            echo "ERROR: Sensitive files tracked by git:"
+            echo "$SENSITIVE"
+            exit 1
+          fi
+          echo "✓ No sensitive files tracked"
+      - name: Scan for hardcoded secrets in diff
+        run: |
+          echo "Scanning committed files for potential secrets..."
+          # Check Python files for hardcoded passwords/keys
+          FOUND=$(grep -rn --include="*.py" -E '(?i)(password|api_key|secret|token)\s*=\s*"[^"]{4,}"' openclaw_mail/ scripts/ 2>/dev/null | grep -v 'getenv\|environ\|get_env\|_env\|test\|mock\|example\|#' || true)
+          if [ -n "$FOUND" ]; then
+            echo "WARNING: Potential hardcoded secrets found:"
+            echo "$FOUND"
+            exit 1
+          fi
+          echo "✓ No hardcoded secrets detected"

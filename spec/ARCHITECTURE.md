@@ -163,12 +163,15 @@ For exact-timing tasks, use cron (see `cron/crontab.example`).
 
 ```
 openclaw_mail/              # Python package (root-level)
-├── cli.py                  # CLI entrypoints
+├── cli.py                  # CLI entrypoints (tidy, digest, validate)
 ├── config.py               # Config loader (.env + YAML)
 ├── tidy.py                 # Tidy engine + reporting
 ├── digest.py               # Digest generation
 ├── filters/
-│   └── pipeline.py         # 4-step pipeline implementation
+│   └── pipeline.py         # 4-step email filtering pipeline
+├── pipelines/              # Generic pipeline runner framework
+│   ├── runner.py           # Pipeline, PipelineStep, StepResult
+│   └── validation.py       # CI validation steps (ADR, secrets)
 ├── utils/
 │   ├── himalaya.py         # Himalaya CLI wrapper
 │   └── logging.py          # Centralized logging
@@ -188,10 +191,24 @@ config/                     # Configuration (secrets gitignored)
 
 spec/                      # Design & operations docs
 ├── ARCHITECTURE.md         # This file
+├── PIPELINES.md            # Pipeline runner & CI documentation
 ├── TESTING.md              # Testing strategy
 ├── TROUBLESHOOTING.md      # Common issues
-└── LEARNINGS.md            # Agent operational insights
+├── LEARNINGS.md            # Agent operational insights
+└── adrs/                   # Architecture Decision Records
+    ├── ARCH-NNN-*.md       # Decision documents
+    └── ARCH-NNN-*.check.py # Machine-executable validation
+
+.github/workflows/
+└── ci.yml                  # GitHub Actions: lint + test + validate
 
 cron/                       # Cron schedule templates
 └── crontab.example         # Example crontab
 ```
+
+## Further Reading
+
+- `spec/PIPELINES.md` — Pipeline runner framework, ADR system, CI integration
+- `spec/TESTING.md` — Testing strategy, running tests, CI pipeline
+- `spec/TROUBLESHOOTING.md` — DavMail timeouts, common issues
+- `spec/adrs/` — Architecture Decision Records (machine-checkable)
