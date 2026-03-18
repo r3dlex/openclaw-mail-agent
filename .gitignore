@@ -243,12 +243,9 @@ MEMORY.md
 reports/
 logs/
 
-# Legacy artifacts directory (migrated to src/openclaw_mail/)
+# Legacy artifacts directory (migrated to openclaw_mail/)
 # Contains hardcoded paths and email addresses — do not commit
 artifacts/
-
-# Approved PRs list (runtime state)
-approved_prs.txt
 
 # OS files
 .DS_Store

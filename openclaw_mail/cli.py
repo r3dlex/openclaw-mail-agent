@@ -29,15 +29,10 @@ def digest():
     print(f"\nDigest saved to {path}")
 
 
-def pr_check():
-    """Check and approve PRs from inbox."""
-    print("PR check not yet migrated to new module. Use artifacts/check_and_approve_prs.py")
-    sys.exit(1)
-
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python -m openclaw_mail.cli <tidy|digest|pr-check> [--dry-run]")
+        print("Usage: python -m openclaw_mail.cli <tidy|digest> [--dry-run]")
         sys.exit(1)
 
     cmd = sys.argv[1]
@@ -45,8 +40,6 @@ if __name__ == "__main__":
         tidy()
     elif cmd == "digest":
         digest()
-    elif cmd == "pr-check":
-        pr_check()
     else:
         print(f"Unknown command: {cmd}")
         sys.exit(1)

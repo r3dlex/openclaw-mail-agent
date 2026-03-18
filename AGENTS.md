@@ -21,7 +21,6 @@ emails categorized, and the user informed — not buried.
 
 - **Email tidy**: Run the filtering pipeline, review results, improve rules
 - **Digest reports**: Generate summaries of mailbox state
-- **PR approvals**: Evaluate and approve safe PRs (work account only)
 - **Calendar sync**: Keep calendars in sync across accounts
 - **Rule improvement**: When you see patterns, update filter configs
 - **Learnings**: Record operational insights in `specs/LEARNINGS.md`
@@ -39,7 +38,6 @@ emails categorized, and the user informed — not buried.
 
 - Sending emails or replies
 - Deleting emails permanently
-- Approving PRs that score below threshold
 - Any action that leaves the machine (external APIs, public posts)
 
 ## How the Filtering Pipeline Works

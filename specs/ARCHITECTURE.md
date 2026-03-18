@@ -129,21 +129,6 @@ Reports are saved to:
 - `reports/last_tidy_report.md` (latest, overwritten each run)
 - `reports/tidy_YYYYMMDD_HHMMSS.md` (timestamped archive)
 
-## PR Approval Workflow
-
-The PR module scans the work inbox for pull request emails:
-
-1. Detect PR-related emails (subject contains "PR", "Pull Request", etc.)
-2. Extract PR ID from email
-3. Query Azure DevOps API for PR details
-4. Score the PR:
-   - Base score: 10
-   - No description: -2
-   - Active comments: -5
-   - Large PR (>20 files): -2
-5. Score > 8 → auto-approve and send email
-6. Score ≤ 8 → flag for manual review
-
 ## Heartbeat System
 
 The agent can receive periodic heartbeat polls. When a heartbeat arrives:
@@ -184,8 +169,6 @@ openclaw_mail/              # Python package (root-level)
 ├── digest.py               # Digest generation
 ├── filters/
 │   └── pipeline.py         # 4-step pipeline implementation
-├── pr/
-│   └── ado_client.py       # Azure DevOps API
 ├── utils/
 │   ├── himalaya.py         # Himalaya CLI wrapper
 │   └── logging.py          # Centralized logging

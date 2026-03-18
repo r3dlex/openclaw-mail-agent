@@ -1,7 +1,7 @@
 # Openclaw Mail Agent
 
-Intelligent multi-account email management agent with AI-powered categorization,
-digest reporting, and PR approval workflows.
+Intelligent multi-account email management agent with AI-powered categorization
+and digest reporting.
 
 ## Features
 
@@ -9,7 +9,6 @@ digest reporting, and PR approval workflows.
 - **4-step filtering pipeline** — address rules → keywords → AI scoring → review fallback
 - **Per-account configuration** — custom rules and folder structures per mailbox
 - **Digest reports** — daily summaries of inbox state across all accounts
-- **PR approval automation** — evaluate and approve Azure DevOps pull requests
 - **Calendar sync** — CalDAV (Exchange) ↔ Google Calendar *(planned)*
 - **Zero-install** — run everything via Docker, no local setup needed
 
@@ -92,7 +91,6 @@ openclaw_mail/              # Python package (root-level)
 ├── tidy.py                 # Tidy engine + report generation
 ├── digest.py               # Digest generator
 ├── filters/pipeline.py     # 4-step filtering pipeline
-├── pr/ado_client.py        # Azure DevOps API client
 └── utils/                  # Himalaya wrapper, logging
 
 config/                     # All configuration (YAML, gitignored secrets)

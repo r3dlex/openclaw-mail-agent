@@ -33,13 +33,6 @@ GMAIL_HOST = get_env("GMAIL_HOST", "imap.gmail.com")
 GMAIL_PORT = int(get_env("GMAIL_PORT", "993"))
 
 # ---------------------------------------------------------------------------
-# Azure DevOps
-# ---------------------------------------------------------------------------
-ADO_PAT = get_env("ADO_PAT")
-ADO_ORG = get_env("ADO_ORG")
-ADO_PROJECT = get_env("ADO_PROJECT")
-
-# ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
 LOG_DIR = PROJECT_ROOT / get_env("LOG_DIR", "logs")

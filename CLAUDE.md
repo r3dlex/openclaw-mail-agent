@@ -39,8 +39,6 @@ docker compose run test
 │   ├── digest.py          ← Daily digest generator
 │   ├── filters/           ← 4-step filtering pipeline
 │   │   └── pipeline.py    ← FilterPipeline, FilterResult, Email
-│   ├── pr/                ← PR approval workflow
-│   │   └── ado_client.py  ← Azure DevOps REST client
 │   ├── utils/             ← Shared utilities
 │   │   ├── himalaya.py    ← Himalaya CLI wrapper
 │   │   └── logging.py     ← Centralized logging

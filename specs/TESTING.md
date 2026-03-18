@@ -36,7 +36,7 @@ tests/
 
 1. Unit tests go in `tests/test_<module>.py`
 2. Use `conftest.py` fixtures for common setup (sample emails, configs)
-3. Mock external dependencies (himalaya, IMAP, ADO API) — don't hit real servers
+3. Mock external dependencies (himalaya, IMAP) — don't hit real servers
 4. Test the pipeline logic, not the I/O
 
 ## Integration Testing
