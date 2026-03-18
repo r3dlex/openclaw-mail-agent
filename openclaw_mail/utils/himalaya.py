@@ -49,6 +49,44 @@ def create_folder(account: str, folder: str, timeout: int = 10) -> bool:
     return "error" not in stderr.lower()
 
 
+def list_folders(account: str, timeout: int = 15) -> list[str]:
+    """List all folder names for an account."""
+    cmd = f'himalaya folder list -a {account} -o json'
+    stdout, stderr = himalaya_run(cmd, timeout=timeout)
+    if not stdout or "error" in stderr.lower():
+        return []
+    try:
+        folders = json.loads(stdout)
+        return [f["name"] for f in folders]
+    except (json.JSONDecodeError, TypeError, KeyError):
+        return []
+
+
+def bulk_move(account: str, source_folder: str, target_folder: str, timeout: int = 15) -> dict:
+    """Move all emails from source_folder to target_folder.
+
+    Returns dict with keys: moved (int), errors (int), source_empty (bool).
+    """
+    envelopes = get_envelopes(account, source_folder, limit=500, timeout=max(timeout, 30))
+    if not envelopes:
+        return {"moved": 0, "errors": 0, "source_empty": True}
+
+    moved = 0
+    errors = 0
+    for env in envelopes:
+        msg_id = str(env.get("id", ""))
+        if not msg_id:
+            errors += 1
+            continue
+        if move_email(account, msg_id, target_folder, timeout=timeout):
+            moved += 1
+        else:
+            errors += 1
+
+    log.info(f"{account}: moved {moved}/{len(envelopes)} from '{source_folder}' → '{target_folder}' ({errors} errors)")
+    return {"moved": moved, "errors": errors, "source_empty": False}
+
+
 def restart_davmail() -> None:
     """Restart DavMail if it's not responding (macOS)."""
     log.info("Restarting DavMail...")
