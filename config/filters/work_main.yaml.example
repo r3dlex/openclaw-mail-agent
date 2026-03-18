@@ -3,28 +3,78 @@
 # =============================================================================
 # Copy to <account_id>.yaml and customize for your work account.
 # See specs/ARCHITECTURE.md for full pipeline documentation.
+#
+# Work accounts typically need: Executive routing (Step 1), project-specific
+# keyword rules (Step 2), and detailed folder definitions for AI scoring (Step 3).
 # =============================================================================
 
 ai_score_threshold: 0.8
 review_folder: "Review"
 
-# Step 1: Address-based rules — emails from specific senders to folders
+# Step 1: Address-based rules — route VIP/leadership emails directly
 address_rules:
   - sender: "ceo@company.com"
     folder: "Executive"
-  # - sender: "@notifications.github.com"
-  #   folder: "GitHub"
+  # - sender: "vp-engineering@company.com"
+  #   folder: "Executive"
 
-# Step 2: Keyword-based rules — regex patterns on subject+sender
+# Step 2: Keyword-based rules — project, HR, DevOps, etc.
 keyword_rules:
-  - pattern: "(newsletter|marketing|digest|noreply)"
-    folder: "Newsletters"
+  - pattern: "(release|version|v\\d+\\.\\d|patch|build)"
+    folder: "Releases"
     confidence: 0.95
+  - pattern: "(hr|vacation|pto|sick|workday|personnel)"
+    folder: "HR"
+    confidence: 0.95
+  - pattern: "(pull request|pr \\d|code review|devops|azure devops|pipeline)"
+    folder: "Projects/Main/DevOps"
+    confidence: 0.95
+  - pattern: "(jira|confluence|atlassian)"
+    folder: "Projects/Main/Atlassian"
+    confidence: 0.90
+  - pattern: "(newsletter|marketing|digest|noreply|promotions)"
+    folder: "Newsletters"
+    confidence: 0.98
   - pattern: "(invoice|receipt|payment|bill)"
     folder: "Finance"
+    confidence: 0.85
+  - pattern: "(sales|contract|crm|lead|deal|offer|customer)"
+    folder: "Sales"
     confidence: 0.90
+  - pattern: "(it support|helpdesk|service|admin|ticket|incident)"
+    folder: "Admin"
+    confidence: 0.90
+  - pattern: "(vendor|supplier)"
+    folder: "Vendors"
+    confidence: 0.85
+  - pattern: "(security|alert|warning|breach)"
+    folder: "Security"
+    confidence: 0.95
+  - pattern: "(travel|booking|flight|hotel)"
+    folder: "Travel"
+    confidence: 0.85
+  - pattern: "(teams|msteams|meeting)"
+    folder: "Communication/Teams"
+    confidence: 0.85
 
 # Step 3: Folder definitions for AI scoring
 folder_definitions:
+  Admin: "IT support tickets, helpdesk, administrative requests"
+  Archive: "Old, resolved, no longer actionable emails"
+  Communication: "General internal communications"
+  Communication/Teams: "Microsoft Teams meeting invites and chat notifications"
+  Executive: "Emails from C-level, VPs, and leadership"
   Finance: "Invoices, billing, expense reports"
-  Newsletters: "Marketing, subscriptions, company digests"
+  HR: "Human resources, vacation, sick leave, personnel matters"
+  HR/Contracts: "Employment contracts, amendments, offer letters"
+  HR/Training: "Training programs, certifications, learning platforms"
+  Newsletters: "Marketing, subscriptions, company-wide digests"
+  Projects/Main: "Core project communications"
+  Projects/Main/Atlassian: "Jira tickets, Confluence pages"
+  Projects/Main/DevOps: "Pull requests, CI/CD, code reviews"
+  Releases: "Release notifications, version updates, patch notes"
+  Sales: "Sales opportunities, contracts, CRM updates, customer inquiries"
+  Security: "Security alerts, breach warnings"
+  Shopping: "Online orders, delivery tracking"
+  Travel: "Travel bookings, flight and hotel reservations"
+  Vendors: "Vendor and supplier communications"

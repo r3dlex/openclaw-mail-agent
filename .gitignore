@@ -247,6 +247,9 @@ logs/
 # Contains hardcoded paths and email addresses — do not commit
 artifacts/
 
+# Proposal/planning docs (may contain real names/addresses)
+specs/FOLDER_RESTRUCTURE_PROPOSAL.md
+
 # OS files
 .DS_Store
 Thumbs.db

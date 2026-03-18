@@ -25,32 +25,34 @@ address_rules: []
   # - sender: "boss@company.com"
   #   folder: "Executive"
   # - sender: "@notifications.github.com"
-  #   folder: "GitHub"
+  #   folder: "DevOps"
 
 # Step 2: Keyword-based rules (regex pattern → folder).
+# These cover the universal folder set shared by all accounts.
 keyword_rules:
   - pattern: "(newsletter|marketing|digest|no-reply|noreply|promotions|linkedin)"
     folder: "Newsletters"
     confidence: 0.95
-  - pattern: "(invoice|receipt|payment|bill|rechnung|fatura)"
+  - pattern: "(invoice|receipt|payment|bill|rechnung|fatura|boleto)"
     folder: "Finance"
     confidence: 0.90
-  - pattern: "(security|alert|verify|login|auth)"
+  - pattern: "(security|alert|verify|login|auth|segurança|breach)"
     folder: "Security"
     confidence: 0.95
-  - pattern: "(amazon|paypal|delivery|shop|tracking|dhl|ups)"
+  - pattern: "(amazon|paypal|delivery|shop|tracking|dhl|ups|entrega|rastreio|mercado livre|shopee)"
     folder: "Shopping"
     confidence: 0.85
-  - pattern: "(flight|hotel|booking|airbnb|train|bahn|travel)"
+  - pattern: "(flight|hotel|booking|airbnb|train|bahn|travel|voo|reserva|viagem)"
     folder: "Travel"
     confidence: 0.85
 
 # Step 3: Folder definitions for AI scoring.
 # The openclaw agent matches email content against these descriptions.
+# Only universal folders here — per-account configs add role-specific folders.
 folder_definitions:
   Archive: "Old emails, read and no longer actionable"
-  Finance: "Banking, invoices, payments, receipts"
-  Newsletters: "Marketing emails, subscriptions, digests"
-  Security: "Security alerts, verification codes, login notifications"
-  Shopping: "Online orders, delivery tracking, e-commerce"
+  Finance: "Banking, invoices, payments, receipts, credit card statements"
+  Newsletters: "Marketing emails, subscriptions, digests, promotional content"
+  Security: "Security alerts, verification codes, login notifications, breach warnings"
+  Shopping: "Online orders, delivery tracking, e-commerce confirmations"
   Travel: "Flight bookings, hotel reservations, travel itineraries"

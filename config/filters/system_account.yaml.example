@@ -1,0 +1,46 @@
+# =============================================================================
+# System/Agent Account — Filter Configuration (EXAMPLE)
+# =============================================================================
+# Copy to <account_id>.yaml for system/agent accounts that receive notifications.
+# See specs/ARCHITECTURE.md for full pipeline documentation.
+#
+# System accounts typically receive DevOps notifications, vendor emails, and
+# system alerts — not personal or business mail. Keep the folder set minimal.
+# =============================================================================
+
+ai_score_threshold: 0.8
+review_folder: "Review"
+
+address_rules: []
+
+keyword_rules:
+  - pattern: "(azure|devops|pipeline|build|ci/cd)"
+    folder: "DevOps"
+    confidence: 0.90
+  - pattern: "(alert|warning|monitor|error|down)"
+    folder: "Alerts"
+    confidence: 0.90
+  - pattern: "(log|report|cron|scheduled)"
+    folder: "Logs"
+    confidence: 0.85
+  - pattern: "(vendor|service|subscription)"
+    folder: "Vendors"
+    confidence: 0.85
+  - pattern: "(newsletter|marketing|digest|noreply|promotions)"
+    folder: "Newsletters"
+    confidence: 0.95
+  - pattern: "(security|alert|verify|login|auth|breach)"
+    folder: "Security"
+    confidence: 0.95
+
+folder_definitions:
+  Admin: "Administrative tasks, account management"
+  Alerts: "System alerts, monitoring notifications"
+  Archive: "Old, no longer actionable"
+  DevOps: "CI/CD, pipeline, code review notifications"
+  Finance: "Invoices, billing"
+  Logs: "System logs, automated reports"
+  Newsletters: "Marketing, subscriptions"
+  Projects: "Project-related notifications"
+  Security: "Security alerts, breach warnings"
+  Vendors: "Vendor and service provider communications"
