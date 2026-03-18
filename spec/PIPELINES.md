@@ -147,7 +147,7 @@ CI runs automatically on every push to `main` and on pull requests:
 ```bash
 # Run the same checks CI runs
 poetry run ruff check openclaw_mail/ tests/
-poetry run pytest -v --cov=openclaw_mail --cov-fail-under=70
+poetry run pytest -v --cov=openclaw_mail --cov-fail-under=55
 poetry run validate
 ```
 

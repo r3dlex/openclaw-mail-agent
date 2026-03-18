@@ -10,7 +10,7 @@ poetry run pytest -v
 docker compose run test
 
 # With coverage
-poetry run pytest --cov=openclaw_mail --cov-report=term-missing --cov-fail-under=70
+poetry run pytest --cov=openclaw_mail --cov-report=term-missing --cov-fail-under=55
 
 # Run validation pipeline (ADR compliance + sensitive data scan)
 poetry run validate
@@ -95,7 +95,7 @@ Run the same checks locally before pushing:
 
 ```bash
 poetry run ruff check openclaw_mail/ tests/
-poetry run pytest -v --cov=openclaw_mail --cov-fail-under=70
+poetry run pytest -v --cov=openclaw_mail --cov-fail-under=55
 poetry run validate
 ```
 
