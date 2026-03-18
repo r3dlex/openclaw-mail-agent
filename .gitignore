@@ -248,7 +248,7 @@ logs/
 artifacts/
 
 # Proposal/planning docs (may contain real names/addresses)
-specs/FOLDER_RESTRUCTURE_PROPOSAL.md
+spec/FOLDER_RESTRUCTURE_PROPOSAL.md
 
 # OS files
 .DS_Store

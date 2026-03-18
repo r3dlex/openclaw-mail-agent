@@ -146,7 +146,7 @@ For exact-timing tasks, use cron (see `cron/crontab.example`).
 - Bridges Exchange to standard IMAP/SMTP/CalDAV
 - Runs locally, configured via environment variables
 - Ports: IMAP `$DAVMAIL_IMAP_PORT`, SMTP `$DAVMAIL_SMTP_PORT`, CalDAV `$DAVMAIL_CALDAV_PORT`
-- Known for timeouts with large emails — see `specs/TROUBLESHOOTING.md`
+- Known for timeouts with large emails — see `spec/TROUBLESHOOTING.md`
 
 ### Himalaya CLI
 - Rust-based email client abstraction
@@ -186,7 +186,7 @@ config/                     # Configuration (secrets gitignored)
     ├── _example.md          # Template (committed)
     └── *.md                 # Real folder docs (gitignored)
 
-specs/                      # Design & operations docs
+spec/                      # Design & operations docs
 ├── ARCHITECTURE.md         # This file
 ├── TESTING.md              # Testing strategy
 ├── TROUBLESHOOTING.md      # Common issues

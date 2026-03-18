@@ -17,7 +17,7 @@ from pathlib import Path
 # Ensure project root is on sys.path when run as a script
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from openclaw_mail.utils.himalaya import bulk_move, create_folder, get_envelopes, list_folders
+from openclaw_mail.utils.himalaya import bulk_move, create_folder, davmail_timeout, get_envelopes, list_folders
 from openclaw_mail.utils.logging import get_logger
 
 log = get_logger("consolidate")
@@ -83,13 +83,13 @@ def main() -> None:
     if dry_run:
         print("=== DRY RUN — no emails will be moved ===\n")
 
-    # Ensure target folders exist
+    # Ensure target folders exist (DavMail needs higher timeouts)
     print("--- Ensuring target folders exist ---")
     for folder in ENSURE_FOLDERS:
         if dry_run:
             print(f"  [dry-run] Would create: {folder}")
         else:
-            ok = create_folder(ACCOUNT, folder)
+            ok = create_folder(ACCOUNT, folder, timeout=davmail_timeout(20))
             print(f"  {'✓' if ok else '✗'} {folder}")
 
     print()
@@ -102,7 +102,7 @@ def main() -> None:
     for source, target in MOVES:
         sys.stdout.write(f"  Checking {source}...")
         sys.stdout.flush()
-        envelopes = get_envelopes(ACCOUNT, source, limit=500, timeout=90)
+        envelopes = get_envelopes(ACCOUNT, source, limit=500, timeout=davmail_timeout(30))
         count = len(envelopes)
 
         if count == 0:
@@ -114,7 +114,7 @@ def main() -> None:
         else:
             print(f"\r  Moving {count} from {source} → {target}...    ")
             sys.stdout.flush()
-            result = bulk_move(ACCOUNT, source, target, timeout=30)
+            result = bulk_move(ACCOUNT, source, target, timeout=davmail_timeout(30), envelopes=envelopes)
             status = "✓" if result["errors"] == 0 else "⚠"
             print(f"  {status} {source} → {target} (moved {result['moved']}, errors {result['errors']})")
             total_moved += result["moved"]
@@ -168,7 +168,7 @@ def report_orphans() -> None:
     })
 
     # Get server folders
-    server_folders = list_folders(ACCOUNT)
+    server_folders = list_folders(ACCOUNT, timeout=davmail_timeout(30))
     if not server_folders:
         print("  [error] Could not list server folders")
         return
@@ -195,7 +195,7 @@ def report_orphans() -> None:
     if orphans:
         print(f"  Found {len(orphans)} orphan folders (not in filter rules):")
         for folder in orphans:
-            envelopes = get_envelopes(ACCOUNT, folder, limit=1, timeout=15)
+            envelopes = get_envelopes(ACCOUNT, folder, limit=1, timeout=davmail_timeout(15))
             has_mail = "has mail" if envelopes else "empty"
             print(f"    • {folder} ({has_mail})")
     else:

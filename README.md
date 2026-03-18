@@ -62,7 +62,7 @@ step that classifies it:
 | 3 | **AI scoring** | Agent scores email against folder descriptions (threshold: 0.8) |
 | 4 | **Review fallback** | Unmatched emails go to `Review` for manual triage |
 
-→ Full details: `specs/ARCHITECTURE.md`
+→ Full details: `spec/ARCHITECTURE.md`
 
 ## Configuration
 
@@ -94,7 +94,7 @@ openclaw_mail/              # Python package (root-level)
 └── utils/                  # Himalaya wrapper, logging
 
 config/                     # All configuration (YAML, gitignored secrets)
-specs/                      # Architecture & design docs
+spec/                      # Architecture & design docs
 tests/                      # Unit & integration tests
 cron/                       # Cron schedule templates
 ```
@@ -106,10 +106,10 @@ cron/                       # Cron schedule templates
 | `README.md` | Everyone | Project overview & quick start |
 | `CLAUDE.md` | Developer agents | How to work on this codebase |
 | `AGENTS.md` | Openclaw agent | Operating procedures for the mail agent |
-| `specs/ARCHITECTURE.md` | Deep dive | System design, pipeline, infrastructure |
-| `specs/TESTING.md` | Contributors | Testing strategy & running tests |
-| `specs/TROUBLESHOOTING.md` | Operations | Common issues & fixes |
-| `specs/LEARNINGS.md` | Openclaw agent | Operational learnings & patterns |
+| `spec/ARCHITECTURE.md` | Deep dive | System design, pipeline, infrastructure |
+| `spec/TESTING.md` | Contributors | Testing strategy & running tests |
+| `spec/TROUBLESHOOTING.md` | Operations | Common issues & fixes |
+| `spec/LEARNINGS.md` | Openclaw agent | Operational learnings & patterns |
 
 ## Requirements
 

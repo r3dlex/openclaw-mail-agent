@@ -10,7 +10,7 @@
 #   Step 3: AI scoring      — openclaw agent scores email against folder definitions
 #   Step 4: Fallback        — move unmatched emails to the Review folder
 #
-# See specs/ARCHITECTURE.md for full pipeline documentation.
+# See spec/ARCHITECTURE.md for full pipeline documentation.
 # =============================================================================
 
 # Minimum AI score (0.0–1.0) for Step 3 to auto-file an email.

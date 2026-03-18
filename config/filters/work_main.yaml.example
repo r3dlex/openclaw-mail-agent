@@ -2,7 +2,7 @@
 # Work Account — Filter Configuration (EXAMPLE)
 # =============================================================================
 # Copy to <account_id>.yaml and customize for your work account.
-# See specs/ARCHITECTURE.md for full pipeline documentation.
+# See spec/ARCHITECTURE.md for full pipeline documentation.
 #
 # Work accounts typically need: Executive routing (Step 1), project-specific
 # keyword rules (Step 2), and detailed folder definitions for AI scoring (Step 3).

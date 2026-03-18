@@ -56,7 +56,7 @@ docker compose run test
 │       └── _example.md    ← Template (committed)
 │
 ├── tests/                 ← Unit & integration tests
-├── specs/                 ← Architecture & design docs
+├── spec/                 ← Architecture & design docs
 │   ├── ARCHITECTURE.md    ← System design & pipeline docs
 │   ├── TESTING.md         ← Testing strategy
 │   ├── TROUBLESHOOTING.md ← Common issues & fixes
@@ -71,7 +71,7 @@ docker compose run test
 
 ## Key Design Decisions
 
-→ See `specs/ARCHITECTURE.md` for the full picture.
+→ See `spec/ARCHITECTURE.md` for the full picture.
 
 1. **4-step filtering pipeline**: Address → Keywords → AI scoring → Review fallback.
    Each step only runs if the previous didn't match. Configured per-account in
@@ -84,8 +84,8 @@ docker compose run test
 3. **Zero-install via Docker**: `docker compose up mail-tidy` works with just
    Docker installed. No Python, no himalaya, nothing else needed.
 
-4. **Progressive disclosure**: This file links to `specs/` for details.
-   `AGENTS.md` links to `specs/` for the openclaw agent's reference.
+4. **Progressive disclosure**: This file links to `spec/` for details.
+   `AGENTS.md` links to `spec/` for the openclaw agent's reference.
 
 5. **Sensitive data separation**: Real account configs (`accounts.yaml`,
    per-account filters, folder mappings) are gitignored. Only `_default.yaml`,

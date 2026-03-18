@@ -2,7 +2,7 @@
 # Personal Account — Filter Configuration (EXAMPLE)
 # =============================================================================
 # Copy to <account_id>.yaml and customize for your personal account.
-# See specs/ARCHITECTURE.md for full pipeline documentation.
+# See spec/ARCHITECTURE.md for full pipeline documentation.
 #
 # Personal accounts typically have no address rules (Step 1) and rely on
 # keyword rules (Step 2) for common services and AI scoring (Step 3) for nuance.

@@ -2,20 +2,50 @@
 
 ## DavMail Issues
 
-### Timeouts on Large Emails
+### Timeouts on DavMail Operations
 
-**Symptom**: Himalaya commands hang or return "timeout" for the RIB account.
+**Symptom**: Himalaya commands hang or return "timeout" for DavMail accounts
+(e.g. RIB). Moves silently fail, envelope lists return empty.
 
-**Cause**: DavMail struggles with large emails (>5MB) containing attachments
-like PowerPoint files, PDFs, or ZIP archives.
+**Cause**: DavMail (Exchange/O365 IMAP bridge) is inherently slow — typical
+response times are 5–90 seconds per query. Large emails (>5MB with attachments)
+and batch moves (many IDs in one command) are especially slow.
 
-**Fix**:
-1. The system automatically restarts DavMail on timeout (`restart_davmail()`)
-2. RIB account uses a reduced batch size (5 emails vs 50)
-3. If persistent, manually restart DavMail:
-   ```bash
-   pkill -f davmail && open -a DavMail  # macOS
+**How the system handles it** (see `openclaw_mail/utils/himalaya.py`):
+
+1. **`davmail_timeout(base)`** — multiplies base timeout by `DAVMAIL_TIMEOUT_MULTIPLIER`
+   (default 4×). Use this when passing timeouts for DavMail accounts:
+   ```python
+   from openclaw_mail.utils.himalaya import davmail_timeout
+   create_folder(account, folder, timeout=davmail_timeout(20))  # → 80s
    ```
+
+2. **`himalaya_run_with_retry()`** — retries on timeout with exponential back-off.
+   All high-level functions (`move_email`, `create_folder`, `list_folders`) now
+   use this internally.
+
+3. **Scaled batch timeouts** — `move_email()` adds +1s per message ID to the
+   timeout. `bulk_move()` does the same. A batch of 170 messages gets ~230s.
+
+4. **DavMail restart** — `get_envelopes_with_retry()` auto-restarts DavMail on
+   first failure for DavMail accounts.
+
+5. **Timeout logging** — all timeouts are now logged as warnings with the
+   command that timed out.
+
+**Default timeout comparison**:
+
+| Function | Old default | New default | DavMail (4×) |
+|----------|-------------|-------------|--------------|
+| `move_email` | 15s | 30s | 120s + 1s/msg |
+| `create_folder` | 10s | 20s | 80s |
+| `list_folders` | 15s | 30s | 120s |
+| `get_envelopes` | 30s | 30s | 120s |
+
+**Manual fix** (if automated retry fails):
+```bash
+pkill -f davmail && open -a DavMail  # macOS
+```
 
 ### DavMail Not Starting
 

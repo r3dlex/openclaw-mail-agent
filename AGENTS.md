@@ -23,7 +23,7 @@ emails categorized, and the user informed — not buried.
 - **Digest reports**: Generate summaries of mailbox state
 - **Calendar sync**: Keep calendars in sync across accounts
 - **Rule improvement**: When you see patterns, update filter configs
-- **Learnings**: Record operational insights in `specs/LEARNINGS.md`
+- **Learnings**: Record operational insights in `spec/LEARNINGS.md`
 
 ### What You Decide Autonomously
 
@@ -32,7 +32,7 @@ emails categorized, and the user informed — not buried.
 - Generating reports and digests
 - Updating `HEARTBEAT.md` with your task checklist
 - Logging your actions to daily notes
-- Adding learnings to `specs/LEARNINGS.md`
+- Adding learnings to `spec/LEARNINGS.md`
 
 ### What Requires User Confirmation
 
@@ -42,7 +42,7 @@ emails categorized, and the user informed — not buried.
 
 ## How the Filtering Pipeline Works
 
-→ Full details: `specs/ARCHITECTURE.md`
+→ Full details: `spec/ARCHITECTURE.md`
 
 Each email passes through 4 steps. First match wins:
 
@@ -74,7 +74,7 @@ Use whichever is most natural. The system resolves all three.
 - **Folder documentation**: `config/folder_mappings/<account_id>.md`
 - **Environment secrets**: `.env` (never read by you directly — loaded by the system)
 
-→ Adding accounts / modifying rules: `specs/ARCHITECTURE.md`
+→ Adding accounts / modifying rules: `spec/ARCHITECTURE.md`
 
 ## Reports
 
@@ -89,7 +89,7 @@ Reports are saved to `reports/`.
 
 - **Daily notes**: `memory/YYYY-MM-DD.md` — raw logs of what happened
 - **Long-term**: `MEMORY.md` — curated learnings, decisions, patterns
-- **Learnings**: `specs/LEARNINGS.md` — operational insights you maintain
+- **Learnings**: `spec/LEARNINGS.md` — operational insights you maintain
 - Write things down. Your memory doesn't survive sessions. Files do.
 
 ## Red Lines
@@ -104,12 +104,12 @@ Reports are saved to `reports/`.
 When you receive a heartbeat, check `HEARTBEAT.md` for tasks.
 If nothing needs attention, reply `HEARTBEAT_OK`.
 
-→ Heartbeat details: `specs/ARCHITECTURE.md#heartbeat-system`
+→ Heartbeat details: `spec/ARCHITECTURE.md#heartbeat-system`
 
 ## Progressive Disclosure
 
 Need more detail? Read these in order:
-1. `specs/ARCHITECTURE.md` — system design, pipeline details, account setup
-2. `specs/TROUBLESHOOTING.md` — DavMail issues, timeout handling, common errors
-3. `specs/TESTING.md` — how to verify changes work
-4. `specs/LEARNINGS.md` — your operational learnings (you maintain this file)
+1. `spec/ARCHITECTURE.md` — system design, pipeline details, account setup
+2. `spec/TROUBLESHOOTING.md` — DavMail issues, timeout handling, common errors
+3. `spec/TESTING.md` — how to verify changes work
+4. `spec/LEARNINGS.md` — your operational learnings (you maintain this file)

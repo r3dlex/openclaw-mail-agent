@@ -14,7 +14,7 @@ from pathlib import Path
 
 from openclaw_mail.config import REPORT_DIR, get_active_accounts, load_filter_config
 from openclaw_mail.filters.pipeline import Email, FilterConfig, FilterPipeline, FilterResult
-from openclaw_mail.utils.himalaya import create_folder, get_envelopes_with_retry, move_email
+from openclaw_mail.utils.himalaya import create_folder, davmail_timeout, get_envelopes_with_retry, move_email
 from openclaw_mail.utils.logging import get_logger
 
 log = get_logger("tidy", "tidy.log")
@@ -102,8 +102,11 @@ def process_account(account: dict, dry_run: bool = False) -> dict:
         report["details"].append(detail)
 
         if not dry_run:
-            create_folder(himalaya_name, result.folder)
-            move_email(himalaya_name, msg_id, result.folder)
+            # DavMail accounts need higher timeouts (5-90s per operation)
+            folder_timeout = davmail_timeout(20) if is_davmail else 20
+            move_timeout = davmail_timeout(30) if is_davmail else 30
+            create_folder(himalaya_name, result.folder, timeout=folder_timeout)
+            move_email(himalaya_name, msg_id, result.folder, timeout=move_timeout)
             log.info(f"  [{result.step}] {subject[:50]}... -> {result.folder}")
 
     return report

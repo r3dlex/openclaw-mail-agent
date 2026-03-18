@@ -2,7 +2,7 @@
 # System/Agent Account — Filter Configuration (EXAMPLE)
 # =============================================================================
 # Copy to <account_id>.yaml for system/agent accounts that receive notifications.
-# See specs/ARCHITECTURE.md for full pipeline documentation.
+# See spec/ARCHITECTURE.md for full pipeline documentation.
 #
 # System accounts typically receive DevOps notifications, vendor emails, and
 # system alerts — not personal or business mail. Keep the folder set minimal.
