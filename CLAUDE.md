@@ -26,8 +26,8 @@ docker compose run test
 ```
 ├── CLAUDE.md              ← You are here (developer guide)
 ├── AGENTS.md              ← Openclaw agent operating guide
-├── SOUL.md                ← Agent philosophy & principles
-├── IDENTITY.md            ← Agent identity (agent-maintained)
+├── SOUL.md                ← Agent identity, principles & IAMQ swarm awareness
+├── IDENTITY.md            ← Agent metadata & learnings (agent-maintained)
 ├── USER.md                ← User context (agent-maintained)
 ├── HEARTBEAT.md           ← Periodic task checklist
 ├── TOOLS.md               ← Environment-specific notes

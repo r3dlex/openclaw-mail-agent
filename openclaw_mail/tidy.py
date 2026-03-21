@@ -236,7 +236,7 @@ def format_report(reports: list[dict]) -> str:
 def format_summary(reports: list[dict]) -> str:
     """Generate a short notification-ready summary.
 
-    This is the text the Openclaw agent sends to Telegram/Instagram.
+    This is the text broadcast via IAMQ to all agents.
     Concise, emoji-marked, fits in a notification bubble.
     """
     now = datetime.now()
@@ -290,7 +290,7 @@ def save_report(reports: list[dict]) -> Path:
     timestamped = REPORT_DIR / f"tidy_{now.strftime('%Y%m%d_%H%M%S')}.md"
     timestamped.write_text(report_text)
 
-    # Short notification summary (for Telegram/Instagram/push)
+    # Short notification summary (broadcast via IAMQ)
     summary_text = format_summary(reports)
     summary_path = REPORT_DIR / "last_tidy_summary.txt"
     summary_path.write_text(summary_text)

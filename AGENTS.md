@@ -83,13 +83,13 @@ After each tidy run, three output files are saved to `reports/`:
 | File | Purpose |
 |------|---------|
 | `last_tidy_report.md` | Full markdown report (overwritten each run) |
-| `last_tidy_summary.txt` | Short notification-ready summary for Telegram/Instagram |
+| `last_tidy_summary.txt` | Short notification-ready summary (broadcast via IAMQ) |
 | `last_tidy_data.json` | Machine-readable JSON for programmatic consumption |
 | `tidy_YYYYMMDD_HHMMSS.md` | Timestamped archive copy |
 
-The **summary** (`last_tidy_summary.txt`) is designed for push notifications:
-concise, one line per account, review emails listed with sender + subject.
-Pick this up and forward it to Telegram/Instagram/push channels.
+The **summary** (`last_tidy_summary.txt`) is broadcast via IAMQ to all agents
+after each tidy run. Concise, one line per account, review emails listed with
+sender + subject. Other agents (instagram, main) pick this up for their channels.
 
 The **JSON** (`last_tidy_data.json`) contains full structured data: per-account
 breakdowns, all auto-filed details, all review emails with reasons. Use this
