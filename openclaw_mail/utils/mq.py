@@ -27,9 +27,28 @@ log = get_logger("mq", "mq.log")
 AGENT_ID = "mail_agent"
 MQ_HTTP_BASE = "http://127.0.0.1:18790"
 MQ_QUEUE_DIR = Path.home() / "Ws" / "Openclaw" / "openclaw-inter-agent-message-queue" / "queue"
+WORKSPACE = str(Path.home() / "Ws" / "Openclaw" / "openclaw-mail-agent")
 
 # Timeout for HTTP requests to the MQ service (seconds)
 HTTP_TIMEOUT = 5
+
+# Agent metadata — sent with every registration so other agents can discover us
+AGENT_METADATA = {
+    "name": "Openclaw 🦀",
+    "emoji": "🦀",
+    "description": "Multi-account email management and auto-filing. "
+                   "Runs a 4-step filtering pipeline (address/keyword/AI/review) "
+                   "across DavMail and Gmail accounts. Generates tidy reports and digests.",
+    "capabilities": [
+        "email_tidy",
+        "email_digest",
+        "folder_management",
+        "rule_engine",
+        "email_filtering",
+        "inbox_summary",
+    ],
+    "workspace": WORKSPACE,
+}
 
 
 # ---------------------------------------------------------------------------
@@ -128,14 +147,16 @@ def _write_message_file(msg: dict) -> Path | None:
 # ---------------------------------------------------------------------------
 
 def register() -> bool:
-    """Register mail_agent with the MQ service.
+    """Register mail_agent with full metadata so other agents can discover us.
 
-    Tries HTTP first, falls back to logging a notice if the service is down.
-    The file-based queue works regardless of registration.
+    Sends agent_id + name, emoji, description, capabilities, workspace.
+    The MQ service merges metadata on re-registration, so this is safe
+    to call on every startup.
     """
-    result = _post("/register", {"agent_id": AGENT_ID})
+    payload = {"agent_id": AGENT_ID, **AGENT_METADATA}
+    result = _post("/register", payload)
     if result:
-        log.info(f"MQ registered via HTTP: {result}")
+        log.info(f"MQ registered with metadata: {AGENT_ID}")
         return True
     log.info("MQ HTTP unavailable — file-based queue still active")
     return False
@@ -324,11 +345,75 @@ def send_tidy_report(summary: str, full_report: str | None = None) -> None:
     log.info("MQ: tidy report distributed")
 
 
+def reply(original_msg: dict, body: str, msg_type: str = "response") -> dict | None:
+    """Reply to a message via the MQ, setting replyTo correctly."""
+    return send_message(
+        to=original_msg["from"],
+        msg_type=msg_type,
+        subject=f"Re: {original_msg.get('subject', '')}",
+        body=body,
+        priority=original_msg.get("priority", "NORMAL"),
+        reply_to=original_msg.get("id"),
+    )
+
+
+def _handle_request(msg: dict) -> None:
+    """Handle an incoming request message and reply via MQ.
+
+    Recognises roll-call / introduction requests and capability queries.
+    For unknown requests, sends a polite acknowledgement.
+    """
+    subject = msg.get("subject", "").lower()
+    body_lower = msg.get("body", "").lower()
+
+    # Roll-call / introduction requests
+    if any(kw in subject or kw in body_lower for kw in [
+        "roll call", "introduce yourself", "who are you", "capabilities",
+    ]):
+        intro = (
+            f"I am {AGENT_ID} — {AGENT_METADATA['description']}\n\n"
+            f"Workspace: {WORKSPACE}\n"
+            f"Capabilities: {', '.join(AGENT_METADATA['capabilities'])}\n\n"
+            "Send me requests of type 'request' and I'll process them. "
+            "I broadcast tidy reports after each run so all agents stay informed."
+        )
+        reply(msg, intro, msg_type="response")
+        log.info(f"MQ: replied to roll-call from {msg['from']}")
+        return
+
+    # Inbox summary request
+    if any(kw in subject or kw in body_lower for kw in [
+        "inbox summary", "email summary", "mail summary", "tidy status",
+    ]):
+        # Try to read the latest summary
+        from openclaw_mail.config import REPORT_DIR
+        summary_file = REPORT_DIR / "last_tidy_summary.txt"
+        if summary_file.exists():
+            summary = summary_file.read_text()
+        else:
+            summary = "No tidy report available yet. Run `mail-tidy` first."
+        reply(msg, summary, msg_type="response")
+        log.info(f"MQ: sent inbox summary to {msg['from']}")
+        return
+
+    # Generic acknowledgement for other requests
+    reply(
+        msg,
+        f"Received your request: {msg.get('subject', '?')}. "
+        "I'll process this on my next cycle.",
+        msg_type="response",
+    )
+    log.info(f"MQ: acknowledged request from {msg['from']}: {msg.get('subject')}")
+
+
 def process_inbox() -> list[dict]:
     """Check inbox for messages and process them.
 
+    - info/response messages: log and mark as acted
+    - request messages: handle (auto-reply where possible) and mark as acted
+    - error messages: log warning and mark as acted
+
     Returns list of messages that were processed.
-    Marks each as read after processing.
     """
     messages = check_inbox()
     processed = []
@@ -341,14 +426,24 @@ def process_inbox() -> list[dict]:
         msg_id = msg.get("id")
 
         log.info(f"MQ inbox: [{msg_type}] from {msg_from}: {subject}")
-
-        # Log the message content for the agent to see
         if body:
-            log.info(f"  Body: {body[:200]}")
+            log.info(f"  Body: {body[:300]}")
 
-        # Mark as read
+        # Mark as read first
         if msg_id:
             mark_read(msg_id)
+
+        # Handle requests — reply via MQ
+        if msg_type == "request":
+            _handle_request(msg)
+
+        # Log errors from other agents
+        if msg_type == "error":
+            log.warning(f"MQ error from {msg_from}: {subject} — {body[:200]}")
+
+        # Mark as acted (we've processed it)
+        if msg_id:
+            mark_acted(msg_id)
 
         processed.append(msg)
 
