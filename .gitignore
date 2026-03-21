@@ -242,6 +242,7 @@ MEMORY.md
 # Reports & logs (generated at runtime)
 reports/
 logs/
+!logs/.gitkeep
 
 # Legacy artifacts directory (migrated to openclaw_mail/)
 # Contains hardcoded paths and email addresses — do not commit

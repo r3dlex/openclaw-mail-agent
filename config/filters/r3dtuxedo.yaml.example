@@ -1,0 +1,49 @@
+# =============================================================================
+# R3DTuxedo — Filter Configuration (EXAMPLE)
+# =============================================================================
+# Personal/side-project account. Copy to r3dtuxedo.yaml and customize.
+# =============================================================================
+
+ai_score_threshold: 0.8
+review_folder: "Review"
+
+address_rules:
+  # Side-project collaborator
+  - sender: "collaborator@example.com"
+    folder: "Projects/MyProject"
+  # Jira notifications
+  - sender: "@atlassian.net"
+    folder: "Projects/MyProject"
+  # GitHub
+  - sender: "@github.com"
+    folder: "DevOps"
+
+keyword_rules:
+  - pattern: "(my.?project|proj-\\d+)"
+    folder: "Projects/MyProject"
+    confidence: 0.95
+  - pattern: "(github|pull request|ci/cd)"
+    folder: "DevOps"
+    confidence: 0.90
+  - pattern: "(security.?alert|verify|verification.?code)"
+    folder: "Security"
+    confidence: 0.95
+  - pattern: "(newsletter|marketing|digest|noreply)"
+    folder: "Newsletters"
+    confidence: 0.95
+  - pattern: "(invoice|receipt|payment|bill)"
+    folder: "Finance"
+    confidence: 0.90
+  - pattern: "(amazon|paypal|delivery|tracking)"
+    folder: "Shopping"
+    confidence: 0.85
+
+folder_definitions:
+  Archive: "Old emails, no longer actionable"
+  Cloud: "Cloud provider notifications"
+  DevOps: "GitHub, CI/CD, code reviews"
+  Finance: "Invoices, receipts, payments"
+  Newsletters: "Marketing, subscriptions"
+  Projects/MyProject: "Side project collaboration — Jira, Firebase"
+  Security: "Security alerts, verification codes"
+  Shopping: "Online orders, delivery tracking"

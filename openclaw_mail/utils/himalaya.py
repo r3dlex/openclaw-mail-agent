@@ -276,8 +276,8 @@ def get_envelopes_with_retry(
     For DavMail accounts, uses higher timeouts and smaller batch sizes.
     Falls back to restarting DavMail if the first attempt fails.
     """
-    timeout = davmail_timeout(30) if is_davmail else 30  # 120s vs 30s
-    batch = min(limit, 5) if is_davmail else limit
+    timeout = davmail_timeout(60) if is_davmail else 30  # 240s vs 30s for large batches
+    batch = limit  # No artificial cap — fetch all requested
     davmail_restarted = False
 
     for attempt in range(max_retries):

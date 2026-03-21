@@ -44,7 +44,7 @@ docker compose run test
 │   │   └── validation.py  ← CI validation (ADR, secrets, gitignore)
 │   ├── utils/             ← Shared utilities
 │   │   ├── himalaya.py    ← Himalaya CLI wrapper
-│   │   └── logging.py     ← Centralized logging
+│   │   └── logging.py     ← Centralized logging (stdout + file)
 │   ├── accounts/          ← Account management (stub)
 │   └── calendar/          ← Calendar sync (stub)
 │
@@ -112,6 +112,10 @@ docker compose run test
 
 8. **GitHub Actions CI**: Lint + test + validate on every push/PR.
    → `.github/workflows/ci.yml`
+
+9. **Centralized logging**: All modules log to both stdout and
+   `logs/openclaw.log` (shared) plus optional per-module files. The `logs/`
+   directory is gitignored with a `.gitkeep` so it's always present.
 
 ## Working with the Code
 

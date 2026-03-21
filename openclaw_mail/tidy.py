@@ -4,10 +4,18 @@ Generates a full report of all mailboxes and emails filtered, including:
   - Content snippet and title for each email
   - Which step classified it (address/keyword/ai/review)
   - A list of emails requiring manual review
+
+Output destinations:
+  - Console (stdout) — human-readable summary
+  - reports/last_tidy_report.md — full markdown report (latest)
+  - reports/tidy_YYYYMMDD_HHMMSS.md — timestamped archive
+  - reports/last_tidy_summary.txt — short notification-ready summary
+  - logs/openclaw.log + logs/tidy.log — structured logs
 """
 
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from pathlib import Path
 
@@ -22,11 +30,13 @@ log = get_logger("tidy", "tidy.log")
 def process_account(account: dict, dry_run: bool = False) -> dict:
     """Process a single account through the filtering pipeline.
 
+    Fetches and processes emails in small batches to handle large inboxes.
     Returns a report dict with keys: account, moved, details, review_emails.
     """
     account_id = account["id"]
     himalaya_name = account.get("himalaya_name", account_id)
-    is_davmail = account.get("provider") == "davmail"
+    provider = account.get("provider", "")
+    is_davmail = provider == "davmail"
 
     # Load per-account filter config (falls back to _default.yaml)
     filter_data = load_filter_config(account_id)
@@ -43,9 +53,7 @@ def process_account(account: dict, dry_run: bool = False) -> dict:
 
     nickname = account.get("nickname", account_id)
     log.info(f"Processing {account['name']} [{nickname}] ({himalaya_name})...")
-
-    limit = 5 if is_davmail else 50
-    envelopes = get_envelopes_with_retry(himalaya_name, "INBOX", limit=limit, is_davmail=is_davmail)
+    log.info(f"  Provider: {provider}, is_davmail: {is_davmail}")
 
     report = {
         "account": account["name"],
@@ -58,62 +66,101 @@ def process_account(account: dict, dry_run: bool = False) -> dict:
         "review_emails": [],
     }
 
-    if not envelopes:
-        log.info(f"  {account['name']}: No emails to process")
-        return report
-
-    for env in envelopes:
-        subject = env.get("subject", "")
-        sender_data = env.get("from", {})
-        sender = sender_data.get("addr", "") if isinstance(sender_data, dict) else str(sender_data)
-        sender_name = sender_data.get("name", "") if isinstance(sender_data, dict) else ""
-        msg_id = env.get("id", "")
-
-        if not msg_id:
-            continue
-
-        email = Email(
-            id=msg_id,
-            subject=subject,
-            sender=sender,
-            sender_name=sender_name,
-            snippet=subject[:200],
+    # Process emails in small batches - fetch and process each batch immediately
+    batch_size = 5
+    total_fetched = 0
+    
+    while True:
+        # Fetch a batch
+        envelopes = get_envelopes_with_retry(
+            himalaya_name, "INBOX", 
+            limit=batch_size, 
+            is_davmail=is_davmail,
+            max_retries=2,
         )
+        
+        if not envelopes:
+            # No more emails - inbox is empty
+            break
+            
+        total_fetched += len(envelopes)
+        log.info(f"  Batch: fetched {len(envelopes)} emails, processing...")
+        
+        # Process each email in this batch
+        for env in envelopes:
+            subject = env.get("subject", "")
+            sender_data = env.get("from", {})
+            sender = sender_data.get("addr", "") if isinstance(sender_data, dict) else str(sender_data)
+            sender_name = sender_data.get("name", "") if isinstance(sender_data, dict) else ""
+            msg_id = env.get("id", "")
 
-        result: FilterResult = pipeline.classify(email)
-        report["total_processed"] += 1
+            if not msg_id:
+                continue
 
-        detail = {
-            "subject": subject[:80],
-            "sender": sender[:50],
-            "folder": result.folder,
-            "step": result.step,
-            "confidence": result.confidence,
-            "reason": result.reason,
-        }
+            email = Email(
+                id=msg_id,
+                subject=subject,
+                sender=sender,
+                sender_name=sender_name,
+                snippet=subject[:200],
+            )
 
-        if result.step == "review":
-            report["review_count"] += 1
-            report["review_emails"].append(detail)
-        else:
-            report["auto_filed"] += 1
+            result: FilterResult = pipeline.classify(email)
+            report["total_processed"] += 1
 
-        report["details"].append(detail)
+            detail = {
+                "subject": subject[:80],
+                "sender": sender[:50],
+                "folder": result.folder,
+                "step": result.step,
+                "confidence": result.confidence,
+                "reason": result.reason,
+            }
 
-        if not dry_run:
-            # DavMail accounts need higher timeouts (5-90s per operation)
-            folder_timeout = davmail_timeout(20) if is_davmail else 20
-            move_timeout = davmail_timeout(30) if is_davmail else 30
-            create_folder(himalaya_name, result.folder, timeout=folder_timeout)
-            move_email(himalaya_name, msg_id, result.folder, timeout=move_timeout)
-            log.info(f"  [{result.step}] {subject[:50]}... -> {result.folder}")
+            if result.step == "review":
+                report["review_count"] += 1
+                report["review_emails"].append(detail)
+            else:
+                report["auto_filed"] += 1
+
+            report["details"].append(detail)
+
+            if not dry_run:
+                # DavMail accounts need higher timeouts (5-90s per operation)
+                folder_timeout = davmail_timeout(20) if is_davmail else 20
+                move_timeout = davmail_timeout(30) if is_davmail else 30
+                create_folder(himalaya_name, result.folder, timeout=folder_timeout)
+                move_email(himalaya_name, msg_id, result.folder, timeout=move_timeout)
+                log.info(f"    [{result.step}] {subject[:50]}... -> {result.folder}")
+        
+        # If we got fewer than batch_size, we've reached the end of inbox
+        if len(envelopes) < batch_size:
+            break
+
+    log.info(f"  Done: processed {report['total_processed']} emails, {report['auto_filed']} auto-filed, {report['review_count']} need review")
+    
+    if report["total_processed"] == 0:
+        log.info(f"  {account['name']}: No emails to process")
 
     return report
 
 
-def run_all(dry_run: bool = False) -> list[dict]:
-    """Run tidy across all active accounts."""
+def run_all(dry_run: bool = False, account_filter: str | None = None) -> list[dict]:
+    """Run tidy across all active accounts.
+    
+    Args:
+        dry_run: If True, don't actually move emails
+        account_filter: Optional account ID (matches id, nickname, or himalaya_name)
+    """
     accounts = get_active_accounts()
+    
+    # Filter to specific account if requested
+    if account_filter:
+        accounts = [a for a in accounts 
+                    if a["id"] == account_filter 
+                    or a.get("nickname") == account_filter
+                    or a.get("himalaya_name") == account_filter]
+    
     reports = []
     for acc in accounts:
         report = process_account(acc, dry_run=dry_run)
@@ -186,17 +233,92 @@ def format_report(reports: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def save_report(reports: list[dict]) -> Path:
-    """Save the tidy report to the reports directory."""
-    REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    report_text = format_report(reports)
+def format_summary(reports: list[dict]) -> str:
+    """Generate a short notification-ready summary.
 
-    # Save as latest + timestamped
+    This is the text the Openclaw agent sends to Telegram/Instagram.
+    Concise, emoji-marked, fits in a notification bubble.
+    """
+    now = datetime.now()
+    total_processed = sum(r["total_processed"] for r in reports)
+    total_auto = sum(r["auto_filed"] for r in reports)
+    total_review = sum(r["review_count"] for r in reports)
+    active_accounts = [r for r in reports if r["total_processed"] > 0]
+
+    if total_processed == 0:
+        return f"Tidy {now.strftime('%H:%M')} — All inboxes clean. Nothing to process."
+
+    lines = [f"Tidy {now.strftime('%H:%M')} — {total_processed} emails processed"]
+
+    # Per-account one-liner
+    for r in active_accounts:
+        nick = r.get("nickname", r.get("account_id", ""))
+        lines.append(f"  {nick}: {r['auto_filed']} filed, {r['review_count']} review")
+
+    # Bottom line
+    if total_review > 0:
+        lines.append(f"=> {total_auto} auto-filed, {total_review} need review")
+        # List review emails
+        for r in reports:
+            for e in r["review_emails"]:
+                subj = e["subject"][:40]
+                sender = e["sender"].split("@")[0]
+                lines.append(f"  ? {sender}: {subj}")
+    else:
+        lines.append(f"=> {total_auto} auto-filed, 0 review")
+
+    return "\n".join(lines)
+
+
+def save_report(reports: list[dict]) -> Path:
+    """Save the tidy report, summary, and JSON to the reports directory.
+
+    Files written:
+      - last_tidy_report.md  — full markdown report (overwritten each run)
+      - last_tidy_summary.txt — short notification summary (overwritten)
+      - last_tidy_data.json — machine-readable report data (overwritten)
+      - tidy_YYYYMMDD_HHMMSS.md — timestamped archive copy
+    """
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    now = datetime.now()
+
+    # Full markdown report
+    report_text = format_report(reports)
     latest = REPORT_DIR / "last_tidy_report.md"
     latest.write_text(report_text)
 
-    timestamped = REPORT_DIR / f"tidy_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+    timestamped = REPORT_DIR / f"tidy_{now.strftime('%Y%m%d_%H%M%S')}.md"
     timestamped.write_text(report_text)
 
-    log.info(f"Report saved to {latest}")
+    # Short notification summary (for Telegram/Instagram/push)
+    summary_text = format_summary(reports)
+    summary_path = REPORT_DIR / "last_tidy_summary.txt"
+    summary_path.write_text(summary_text)
+
+    # Machine-readable JSON (for the Openclaw agent to parse)
+    json_data = {
+        "timestamp": now.isoformat(),
+        "total_processed": sum(r["total_processed"] for r in reports),
+        "total_auto_filed": sum(r["auto_filed"] for r in reports),
+        "total_review": sum(r["review_count"] for r in reports),
+        "accounts": [
+            {
+                "name": r["account"],
+                "nickname": r.get("nickname", ""),
+                "processed": r["total_processed"],
+                "auto_filed": r["auto_filed"],
+                "review_count": r["review_count"],
+                "review_emails": r["review_emails"],
+                "details": r["details"],
+            }
+            for r in reports
+        ],
+    }
+    json_path = REPORT_DIR / "last_tidy_data.json"
+    json_path.write_text(json.dumps(json_data, indent=2, ensure_ascii=False))
+
+    log.info(f"Report saved: {latest}")
+    log.info(f"Summary saved: {summary_path}")
+    log.info(f"JSON saved: {json_path}")
+
     return latest

@@ -76,14 +76,65 @@ Use whichever is most natural. The system resolves all three.
 
 → Adding accounts / modifying rules: `spec/ARCHITECTURE.md`
 
-## Reports
+## Reports & Notifications
 
-After each tidy run, generate a report with:
+After each tidy run, three output files are saved to `reports/`:
+
+| File | Purpose |
+|------|---------|
+| `last_tidy_report.md` | Full markdown report (overwritten each run) |
+| `last_tidy_summary.txt` | Short notification-ready summary for Telegram/Instagram |
+| `last_tidy_data.json` | Machine-readable JSON for programmatic consumption |
+| `tidy_YYYYMMDD_HHMMSS.md` | Timestamped archive copy |
+
+The **summary** (`last_tidy_summary.txt`) is designed for push notifications:
+concise, one line per account, review emails listed with sender + subject.
+Pick this up and forward it to Telegram/Instagram/push channels.
+
+The **JSON** (`last_tidy_data.json`) contains full structured data: per-account
+breakdowns, all auto-filed details, all review emails with reasons. Use this
+for dashboards, analytics, or rich notifications.
+
+The **full report** always includes:
 - Per-account breakdown (processed, auto-filed, review)
 - Table of auto-filed emails with subject, sender, folder, step, confidence
-- **List of emails requiring review** — always include this
+- **List of emails requiring review** — always present
 
-Reports are saved to `reports/`.
+Everything is also logged to `logs/openclaw.log` and `logs/tidy.log`.
+
+## Inter-Agent Message Queue
+
+You are registered as `mail_agent` on the OpenClaw inter-agent MQ service.
+Every CLI command (tidy, digest) automatically:
+
+1. **Registers** with the MQ service (HTTP at `127.0.0.1:18790`)
+2. **Checks your inbox** for messages from other agents
+3. **Broadcasts tidy reports** so all agents know about mail activity
+
+### Messaging
+
+- **Send**: `mq.send_message(to, type, subject, body)`
+- **Broadcast**: `mq.broadcast(type, subject, body)`
+- **Check inbox**: `mq.check_inbox()` or `mq.process_inbox()`
+
+### Known Agents
+
+Check who's online: `mq.get_agents()`
+
+Common recipients:
+- `main` — orchestrator / dashboard
+- `instagram_agent` — social media posting
+- `librarian_agent` — research requests
+- `journalist_agent` — content creation
+- `sysadmin_agent` — infrastructure
+- `broadcast` — all agents
+
+### Fallback
+
+If the Elixir service is down, messages are written as JSON files to:
+`~/Ws/Openclaw/openclaw-inter-agent-message-queue/queue/{agent_id}/`
+
+See: `openclaw-inter-agent-message-queue/spec/API.md` and `spec/PROTOCOL.md`
 
 ## Memory & Continuity
 
