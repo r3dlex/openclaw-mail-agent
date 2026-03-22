@@ -52,10 +52,10 @@ _SCAN_EXTENSIONS: set[str] = {".py", ".yaml", ".yml", ".toml", ".md", ".sh", ".j
 
 # Files where email patterns are expected (test fixtures, examples, docs)
 _EMAIL_ALLOWED_FILES: set[str] = {
-    "conftest.py", "test_pipeline.py", "test_himalaya.py",
+    "conftest.py", "test_pipeline.py", "test_himalaya.py", "test_mq.py",
     "accounts.yaml.example", "_default.yaml",
     "work_main.yaml.example", "personal_main.yaml.example",
-    "system_account.yaml.example", "_example.md",
+    "system_account.yaml.example", "r3dtuxedo.yaml.example", "_example.md",
     "ARCHITECTURE.md", "AGENTS.md", "CLAUDE.md", "README.md",
     "TROUBLESHOOTING.md", "TESTING.md", "PIPELINES.md",
     "validation.py",  # this file contains patterns
