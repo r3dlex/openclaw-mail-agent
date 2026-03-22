@@ -589,6 +589,141 @@ class TestSendTidyReport:
         main_calls = [c for c in calls if c[0][1].get("to") == "main"]
         assert len(main_calls[0][0][1]["body"]) <= 5000
 
+    def test_routes_pr_emails_when_reports_provided(self):
+        reports = [{
+            "account": "RIB",
+            "details": [
+                {"subject": "PR #41767: Fix auth timeout", "sender": "azuredevops@microsoft.com",
+                 "folder": "Projects/RIB-4.0/DevOps", "step": "address", "confidence": 1.0, "reason": ""},
+            ],
+            "review_emails": [],
+        }]
+        with patch.object(mq, "_post", return_value={"id": "x"}) as mock_post:
+            mq.send_tidy_report("Summary", reports=reports)
+        calls = mock_post.call_args_list
+        gitrepo_calls = [c for c in calls if c[0][1].get("to") == "gitrepo_agent"]
+        assert len(gitrepo_calls) == 1
+        assert "PR #41767" in gitrepo_calls[0][0][1]["body"]
+
+    def test_no_pr_routing_when_no_pr_emails(self):
+        reports = [{
+            "account": "Personal",
+            "details": [
+                {"subject": "Newsletter from OReilly", "sender": "noreply@oreilly.com",
+                 "folder": "Newsletters", "step": "keyword", "confidence": 0.95, "reason": ""},
+            ],
+            "review_emails": [],
+        }]
+        with patch.object(mq, "_post", return_value={"id": "x"}) as mock_post:
+            mq.send_tidy_report("Summary", reports=reports)
+        calls = mock_post.call_args_list
+        gitrepo_calls = [c for c in calls if c[0][1].get("to") == "gitrepo_agent"]
+        assert len(gitrepo_calls) == 0
+
+
+# ---------------------------------------------------------------------------
+# PR email detection and routing
+# ---------------------------------------------------------------------------
+
+class TestIsPrEmail:
+    def test_azure_devops_sender(self):
+        detail = {"subject": "Build completed", "sender": "azuredevops@microsoft.com", "folder": "DevOps"}
+        assert mq._is_pr_email(detail) is True
+
+    def test_github_sender(self):
+        detail = {"subject": "Issue comment", "sender": "noreply@github.com", "folder": "DevOps"}
+        assert mq._is_pr_email(detail) is True
+
+    def test_pr_subject_in_devops_folder(self):
+        detail = {"subject": "Pull request #41767: Fix auth", "sender": "someone@company.com",
+                  "folder": "Projects/RIB-4.0/DevOps"}
+        assert mq._is_pr_email(detail) is True
+
+    def test_code_review_subject(self):
+        detail = {"subject": "Code review requested for feature-branch", "sender": "someone@company.com",
+                  "folder": "DevOps"}
+        assert mq._is_pr_email(detail) is True
+
+    def test_regular_email_not_pr(self):
+        detail = {"subject": "Weekly newsletter", "sender": "news@company.com", "folder": "Newsletters"}
+        assert mq._is_pr_email(detail) is False
+
+    def test_hr_email_not_pr(self):
+        detail = {"subject": "Training scheduled", "sender": "hr@company.com", "folder": "HR"}
+        assert mq._is_pr_email(detail) is False
+
+    def test_pr_subject_in_non_devops_folder(self):
+        """PR subject but wrong folder — should not match unless strong pattern."""
+        detail = {"subject": "Meeting notes", "sender": "someone@company.com", "folder": "Communication"}
+        assert mq._is_pr_email(detail) is False
+
+    def test_merge_code_subject(self):
+        detail = {"subject": "Merge code to release/26.1", "sender": "dev@company.com",
+                  "folder": "Projects/RIB-4.0/DevOps"}
+        assert mq._is_pr_email(detail) is True
+
+    def test_voted_on_pr(self):
+        detail = {"subject": "Jeff.Ruan has voted on PR #123", "sender": "azuredevops@microsoft.com",
+                  "folder": "Projects/RIB-4.0/DevOps"}
+        assert mq._is_pr_email(detail) is True
+
+
+class TestRoutePrEmails:
+    def test_routes_pr_emails(self):
+        reports = [{
+            "account": "RIB Work",
+            "details": [
+                {"subject": "PR #41767: Fix auth", "sender": "azuredevops@microsoft.com",
+                 "folder": "DevOps", "step": "address", "confidence": 1.0, "reason": ""},
+                {"subject": "Newsletter", "sender": "news@company.com",
+                 "folder": "Newsletters", "step": "keyword", "confidence": 0.95, "reason": ""},
+            ],
+            "review_emails": [],
+        }]
+        with patch.object(mq, "_post", return_value={"id": "x"}) as mock_post:
+            count = mq.route_pr_emails(reports)
+        assert count == 1
+        calls = mock_post.call_args_list
+        assert len(calls) == 1
+        payload = calls[0][0][1]
+        assert payload["to"] == "gitrepo_agent"
+        assert payload["type"] == "request"
+        assert payload["priority"] == "HIGH"
+        assert "PR #41767" in payload["body"]
+
+    def test_routes_multiple_prs(self):
+        reports = [{
+            "account": "RIB",
+            "details": [
+                {"subject": "PR #100: Feature A", "sender": "azuredevops@microsoft.com",
+                 "folder": "DevOps", "step": "address", "confidence": 1.0, "reason": ""},
+                {"subject": "PR #200: Feature B", "sender": "azuredevops@microsoft.com",
+                 "folder": "DevOps", "step": "address", "confidence": 1.0, "reason": ""},
+            ],
+            "review_emails": [],
+        }]
+        with patch.object(mq, "_post", return_value={"id": "x"}):
+            count = mq.route_pr_emails(reports)
+        assert count == 2
+
+    def test_no_prs_returns_zero(self):
+        reports = [{
+            "account": "Personal",
+            "details": [
+                {"subject": "Hello", "sender": "friend@gmail.com",
+                 "folder": "Personal", "step": "keyword", "confidence": 0.9, "reason": ""},
+            ],
+            "review_emails": [],
+        }]
+        with patch.object(mq, "_post", return_value={"id": "x"}) as mock_post:
+            count = mq.route_pr_emails(reports)
+        assert count == 0
+        mock_post.assert_not_called()
+
+    def test_empty_reports(self):
+        count = mq.route_pr_emails([])
+        assert count == 0
+
 
 # ---------------------------------------------------------------------------
 # Get status / agents

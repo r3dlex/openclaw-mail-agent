@@ -14,6 +14,7 @@ See: openclaw-inter-agent-message-queue/spec/API.md
 from __future__ import annotations
 
 import json
+import re
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -318,11 +319,16 @@ def get_agents() -> list[dict]:
     return []
 
 
-def send_tidy_report(summary: str, full_report: str | None = None) -> None:
+def send_tidy_report(
+    summary: str,
+    full_report: str | None = None,
+    reports: list[dict] | None = None,
+) -> None:
     """Send a tidy report summary to relevant agents via MQ.
 
     Broadcasts the summary to all agents so they're aware of mail activity.
     Also sends directly to main for dashboard purposes.
+    If reports are provided, routes PR-related emails to gitrepo_agent.
     """
     # Broadcast summary to all agents
     broadcast(
@@ -342,7 +348,96 @@ def send_tidy_report(summary: str, full_report: str | None = None) -> None:
             priority="LOW",
         )
 
+    # Route PR-related emails to gitrepo_agent
+    if reports:
+        route_pr_emails(reports)
+
     log.info("MQ: tidy report distributed")
+
+
+# ---------------------------------------------------------------------------
+# PR email routing — mail_agent → gitrepo_agent
+# ---------------------------------------------------------------------------
+
+# Patterns that indicate a PR/code-review email
+_PR_PATTERNS = re.compile(
+    r"(pull\s*request|"
+    r"\bPR[\s#:]\d|"
+    r"code\s*review|"
+    r"merge\s*(code|request|complet)|"
+    r"approved.*pull|"
+    r"reviewer\s*(added|removed)|"
+    r"completed.*pull\s*request|"
+    r"abandon|"
+    r"has\s*voted|"
+    r"Azure\s*DevOps)",
+    re.IGNORECASE,
+)
+
+# Folders that indicate DevOps/code content
+_DEVOPS_FOLDERS = {"DevOps", "Projects/RIB-4.0/DevOps", "Projects/Deep-Amber"}
+
+# Senders that are known PR notification sources
+_PR_SENDERS = {"azuredevops@microsoft.com", "noreply@github.com"}
+
+
+def _is_pr_email(detail: dict) -> bool:
+    """Check if a tidy detail entry looks like a PR notification."""
+    subject = detail.get("subject", "")
+    sender = detail.get("sender", "").lower()
+    folder = detail.get("folder", "")
+
+    # Known PR notification sender
+    if any(s in sender for s in _PR_SENDERS):
+        return True
+
+    # Filed to a DevOps folder AND subject matches PR pattern
+    if folder in _DEVOPS_FOLDERS and _PR_PATTERNS.search(subject):
+        return True
+
+    # Strong PR pattern match regardless of folder
+    if _PR_PATTERNS.search(subject) and "pull request" in subject.lower():
+        return True
+
+    return False
+
+
+def route_pr_emails(reports: list[dict]) -> int:
+    """Scan tidy results for PR-related emails and forward to gitrepo_agent.
+
+    Returns the number of PR emails routed.
+    """
+    pr_details = []
+    for report in reports:
+        account = report.get("account", "unknown")
+        for detail in report.get("details", []):
+            if _is_pr_email(detail):
+                pr_details.append({**detail, "account": account})
+
+    if not pr_details:
+        return 0
+
+    # Build a summary for gitrepo_agent
+    lines = [f"PR notifications detected in email tidy ({len(pr_details)} items):"]
+    lines.append("")
+    for pr in pr_details:
+        lines.append(
+            f"- [{pr.get('account', '?')}] {pr.get('subject', '?')} "
+            f"(from: {pr.get('sender', '?')}, folder: {pr.get('folder', '?')})"
+        )
+
+    body = "\n".join(lines)
+
+    send_message(
+        to="gitrepo_agent",
+        msg_type="request",
+        subject=f"PR email notifications ({len(pr_details)} items)",
+        body=body,
+        priority="HIGH",
+    )
+
+    log.info(f"MQ: routed {len(pr_details)} PR emails to gitrepo_agent")
+    return len(pr_details)
 
 
 def reply(original_msg: dict, body: str, msg_type: str = "response") -> dict | None:

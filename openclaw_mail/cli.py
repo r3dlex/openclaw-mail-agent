@@ -87,7 +87,7 @@ def tidy():
     # Distribute report via inter-agent MQ
     try:
         from openclaw_mail.utils.mq import send_tidy_report
-        send_tidy_report(summary, full_report)
+        send_tidy_report(summary, full_report, reports=reports)
     except Exception as e:
         log.debug(f"MQ report distribution skipped: {e}")
 
