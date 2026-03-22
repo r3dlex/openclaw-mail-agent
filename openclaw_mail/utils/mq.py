@@ -14,6 +14,7 @@ See: openclaw-inter-agent-message-queue/spec/API.md
 from __future__ import annotations
 
 import json
+import os
 import re
 import uuid
 from datetime import datetime, timezone
@@ -25,10 +26,10 @@ from openclaw_mail.utils.logging import get_logger
 
 log = get_logger("mq", "mq.log")
 
-AGENT_ID = "mail_agent"
-MQ_HTTP_BASE = "http://127.0.0.1:18790"
+AGENT_ID = os.environ.get("IAMQ_AGENT_ID", "mail_agent")
+MQ_HTTP_BASE = os.environ.get("IAMQ_HTTP_URL", "http://127.0.0.1:18790")
 MQ_QUEUE_DIR = Path.home() / "Ws" / "Openclaw" / "openclaw-inter-agent-message-queue" / "queue"
-WORKSPACE = str(Path.home() / "Ws" / "Openclaw" / "openclaw-mail-agent")
+WORKSPACE = str(Path(__file__).resolve().parent.parent.parent)
 
 # Timeout for HTTP requests to the MQ service (seconds)
 HTTP_TIMEOUT = 5
