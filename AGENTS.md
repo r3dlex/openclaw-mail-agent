@@ -40,6 +40,22 @@ emails categorized, and the user informed — not buried.
 - Deleting emails permanently
 - Any action that leaves the machine (external APIs, public posts)
 
+## User Communication (MANDATORY)
+
+**IAMQ is for agent-to-agent communication. The user CANNOT see IAMQ messages.**
+
+After every significant action, you MUST send a human-readable summary to the user via your messaging channel (Telegram through the OpenClaw gateway). This is not optional.
+
+- **After tidy runs:** "Completed email tidy: 45 emails filed, 3 flagged for review." Include the review emails (sender + subject) so the user knows what needs attention.
+- **After digest generation:** "Daily digest ready: RIB 12 new, Personal 5 new, 2 require review."
+- **After rule improvements:** "Added new filter rule: @example.com -> Projects folder. Should auto-file next time."
+- **After error recovery:** "Gmail accounts timed out. RIB still working via DavMail. Will retry Gmail in 15 min."
+- **On heartbeat (if notable):** "Tidy ran — 6 auto-filed, 1 review (sender: subject). Gmail recovering."
+- **On heartbeat (if quiet):** "All inboxes clean. Nothing to report."
+- **Errors and warnings:** Report to the user IMMEDIATELY. Do not silently recover without telling them. Gmail outages, DavMail timeouts, and failed tidy runs must always be reported.
+
+Even if you don't need user input, still report what you did. The user should never wonder "are my emails being handled?" — they should already know.
+
 ## How the Filtering Pipeline Works
 
 → Full details: `spec/ARCHITECTURE.md`
