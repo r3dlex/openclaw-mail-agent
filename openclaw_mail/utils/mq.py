@@ -5,7 +5,7 @@ cross-agent communication. Supports both HTTP API and file-based fallback.
 
 The MQ service runs at:
   - HTTP: http://127.0.0.1:18790
-  - WebSocket: ws://127.0.0.1:18791/ws
+  - WebSocket: ws://127.0.0.1:18793/ws
   - File fallback: ~/Ws/Openclaw/openclaw-inter-agent-message-queue/queue/
 
 See: openclaw-inter-agent-message-queue/spec/API.md

@@ -44,6 +44,21 @@ services:
         echo "Cron jobs installed. Starting cron daemon..."
         cron -f
 
+  # IAMQ sidecar — inter-agent messaging (Elixir/OTP, zero-install)
+  iamq:
+    build: ./iamq
+    restart: unless-stopped
+    environment:
+      IAMQ_HTTP_URL: http://host.docker.internal:18790
+      IAMQ_WS_URL: ws://host.docker.internal:18793/ws
+      IAMQ_AGENT_ID: mail_agent
+      IAMQ_AGENT_NAME: Openclaw
+      IAMQ_AGENT_EMOJI: "\U0001F980"
+      IAMQ_AGENT_DESC: "Multi-account email management and auto-filing. Runs a 4-step filtering pipeline across DavMail and Gmail accounts."
+      IAMQ_AGENT_CAPABILITIES: email_tidy,email_digest,folder_management,rule_engine,email_filtering,inbox_summary
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   # Run tests
   test:
     build: .
