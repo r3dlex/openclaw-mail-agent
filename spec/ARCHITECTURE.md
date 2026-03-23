@@ -191,6 +191,9 @@ config/                     # Configuration (secrets gitignored)
 
 spec/                      # Design & operations docs
 ├── ARCHITECTURE.md         # This file
+├── COMMUNICATION.md        # IAMQ messaging patterns & PR routing
+├── DATA_SCHEMA.md          # Tidy report & message structures
+├── SAFETY.md               # Safety boundaries & PII rules
 ├── PIPELINES.md            # Pipeline runner & CI documentation
 ├── TESTING.md              # Testing strategy
 ├── TROUBLESHOOTING.md      # Common issues
@@ -208,6 +211,9 @@ cron/                       # Cron schedule templates
 
 ## Further Reading
 
+- `spec/COMMUNICATION.md` — IAMQ messaging patterns, PR routing, peer agents
+- `spec/DATA_SCHEMA.md` — Tidy report structures, JSON schema, IAMQ envelope
+- `spec/SAFETY.md` — Safety boundaries, PII rules, credential handling
 - `spec/PIPELINES.md` — Pipeline runner framework, ADR system, CI integration
 - `spec/TESTING.md` — Testing strategy, running tests, CI pipeline
 - `spec/TROUBLESHOOTING.md` — DavMail timeouts, common issues
