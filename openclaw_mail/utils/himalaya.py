@@ -115,14 +115,31 @@ def himalaya_run_with_retry(
 # Envelope operations
 # ---------------------------------------------------------------------------
 
+class HimalayaError:
+    """Sentinel returned by get_envelopes on failure (vs empty inbox = [])."""
+
+    def __init__(self, reason: str):
+        self.reason = reason
+
+    def __repr__(self) -> str:
+        return f"HimalayaError({self.reason!r})"
+
+    def __bool__(self) -> bool:
+        return False  # Falsy so ``if not result:`` still works for simple callers
+
+
 def get_envelopes(
     account: str,
     folder: str = "INBOX",
     limit: int = 50,
     timeout: int = 30,
     retries: int = 0,
-) -> list[dict]:
+) -> list[dict] | HimalayaError:
     """Fetch envelope list from an account via himalaya.
+
+    Returns:
+        list[dict] — envelopes (empty list means inbox is genuinely empty).
+        HimalayaError — on timeout, connection error, or parse failure.
 
     Args:
         account: Himalaya account name.
@@ -137,12 +154,23 @@ def get_envelopes(
         if retries > 0
         else himalaya_run(cmd, timeout=timeout)
     )
-    if not stdout or "error" in stderr.lower():
+
+    # Detect timeout (himalaya_run returns ("", "timeout") on TimeoutExpired)
+    if stderr.strip().lower() == "timeout":
+        return HimalayaError("timeout")
+
+    # Detect IMAP/auth/connection errors
+    if stderr and "error" in stderr.lower():
+        return HimalayaError(f"error: {stderr[:200]}")
+
+    # Empty stdout with no error = genuinely empty inbox
+    if not stdout:
         return []
+
     try:
         return json.loads(stdout)[:limit]
     except (json.JSONDecodeError, TypeError):
-        return []
+        return HimalayaError("json_parse_error")
 
 
 # ---------------------------------------------------------------------------
@@ -273,25 +301,42 @@ def get_envelopes_with_retry(
 ) -> list[dict]:
     """Get envelopes with retry logic for slow/unresponsive servers.
 
-    For DavMail accounts, uses higher timeouts and smaller batch sizes.
-    Falls back to restarting DavMail if the first attempt fails.
+    For DavMail accounts, uses higher timeouts and restarts DavMail on failure.
+    For Gmail accounts, detects timeouts (likely rate limits) and backs off.
+
+    Returns ``[]`` if the inbox is empty or all retries are exhausted.
     """
-    timeout = davmail_timeout(60) if is_davmail else 30  # 240s vs 30s for large batches
-    batch = limit  # No artificial cap — fetch all requested
+    timeout = davmail_timeout(60) if is_davmail else 30
     davmail_restarted = False
 
     for attempt in range(max_retries):
-        envelopes = get_envelopes(account, folder, batch, timeout)
-        if envelopes:
-            return envelopes
+        result = get_envelopes(account, folder, limit, timeout)
 
-        if is_davmail and not davmail_restarted:
-            restart_davmail()
-            davmail_restarted = True
-            continue
+        # Success — got actual envelopes
+        if isinstance(result, list) and result:
+            return result
 
-        wait = (attempt + 1) * 5
-        log.warning(f"{account}: retry {attempt + 2}/{max_retries} in {wait}s...")
-        time.sleep(wait)
+        # Empty inbox (not an error) — no need to retry
+        if isinstance(result, list):
+            return []
+
+        # HimalayaError — decide whether to retry
+        is_timeout = result.reason == "timeout"
+        log.warning(f"{account}: {result.reason} (attempt {attempt + 1}/{max_retries})")
+
+        if attempt < max_retries - 1:
+            if is_timeout and not is_davmail:
+                # Gmail timeout = likely rate limited. Back off aggressively.
+                wait = (attempt + 1) * 15  # 15s, 30s, 45s
+                log.warning(f"{account}: timeout (possible rate limit), waiting {wait}s...")
+            elif is_davmail and not davmail_restarted:
+                # DavMail timeout — restart and retry immediately
+                restart_davmail()
+                davmail_restarted = True
+                continue
+            else:
+                # Other errors — short backoff
+                wait = (attempt + 1) * 5
+            time.sleep(wait)
 
     return []

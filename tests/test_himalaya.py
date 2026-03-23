@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 from openclaw_mail.utils.himalaya import (
     DAVMAIL_TIMEOUT_MULTIPLIER,
     MIN_TIMEOUT,
+    HimalayaError,
     bulk_move,
     create_folder,
     davmail_timeout,
@@ -179,10 +180,19 @@ class TestGetEnvelopes:
         assert result[0]["id"] == "1"
 
     @patch("openclaw_mail.utils.himalaya.himalaya_run")
-    def test_empty_on_timeout(self, mock_run):
+    def test_error_on_timeout(self, mock_run):
         mock_run.return_value = ("", "timeout")
         result = get_envelopes("RIB", "INBOX")
+        assert isinstance(result, HimalayaError)
+        assert result.reason == "timeout"
+        assert not result  # HimalayaError is falsy
+
+    @patch("openclaw_mail.utils.himalaya.himalaya_run")
+    def test_empty_list_on_empty_inbox(self, mock_run):
+        mock_run.return_value = ("", "")
+        result = get_envelopes("RIB", "INBOX")
         assert result == []
+        assert isinstance(result, list)
 
     @patch("openclaw_mail.utils.himalaya.himalaya_run_with_retry")
     def test_uses_retry_when_requested(self, mock_retry):

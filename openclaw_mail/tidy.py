@@ -16,8 +16,10 @@ Output destinations:
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime
 from pathlib import Path
+import time
 
 from openclaw_mail.config import REPORT_DIR, get_active_accounts, load_filter_config
 from openclaw_mail.filters.pipeline import Email, FilterConfig, FilterPipeline, FilterResult
@@ -25,6 +27,73 @@ from openclaw_mail.utils.himalaya import create_folder, davmail_timeout, get_env
 from openclaw_mail.utils.logging import get_logger
 
 log = get_logger("tidy", "tidy.log")
+
+# PR detection patterns — matched against email subject
+_PR_PATTERNS = [
+    # ADO: "PR #41803: Description" or "[RibDevOps] PR #41803: Description"
+    re.compile(r"\bPR\s*#?(\d+)\b", re.IGNORECASE),
+    # GitHub: "[org/repo] PR #123: Title"
+    re.compile(r"\[([^\]]+)\]\s*PR\s*#?(\d+)", re.IGNORECASE),
+    # Generic: just "PR 123" as fallback
+    re.compile(r"\bPR\s+(\d+)\b", re.IGNORECASE),
+]
+
+
+def _detect_pr_from_subject(subject: str, sender: str) -> list[dict]:
+    """Extract PR info from email subject and sender.
+
+    Returns a list of dicts with keys: pr_number, vcs, org, repo
+    """
+    prs = []
+    sender_lower = sender.lower()
+
+    for pattern in _PR_PATTERNS:
+        for m in pattern.finditer(subject):
+            pr_num = m.group(1) or m.group(2)
+            if "azuredevops" in sender_lower or "dev.azure" in sender_lower:
+                vcs, org, repo = "ado", "ribdev", "itwo40"
+            elif "github" in sender_lower or "notifications@github" in sender_lower:
+                vcs, org, repo = "github", "unknown", "unknown"
+            else:
+                vcs, org, repo = "unknown", "unknown", "unknown"
+
+            prs.append({
+                "pr_number": pr_num,
+                "vcs": vcs,
+                "org": org,
+                "repo": repo,
+                "subject": subject[:80],
+                "sender": sender,
+            })
+
+    return prs
+
+
+def _send_pr_to_gitrepo_agent(prs: list[dict]) -> None:
+    """Forward detected PRs to gitrepo_agent via MQ."""
+    if not prs:
+        return
+    try:
+        from openclaw_mail.utils.mq import send_message
+        for pr in prs:
+            task_line = f"{pr['vcs']}:{pr['org']}/{pr['repo']}#{pr['pr_number']}"
+            body = (
+                f"PR notification from email:\n"
+                f"  Task: {task_line}\n"
+                f"  Subject: {pr['subject']}\n"
+                f"  Sender: {pr['sender']}\n"
+                f"  Source: email_tidy_pipeline\n"
+            )
+            send_message(
+                to="gitrepo_agent",
+                msg_type="request",
+                subject=f"PR review: {task_line}",
+                body=body,
+                priority="NORMAL",
+            )
+        log.info(f"[MQ] Sent {len(prs)} PR(s) to gitrepo_agent: {[p['pr_number'] for p in prs]}")
+    except Exception as e:
+        log.warning(f"[MQ] Failed to send PRs to gitrepo_agent: {e}")
 
 
 def process_account(account: dict, dry_run: bool = False) -> dict:
@@ -86,6 +155,10 @@ def process_account(account: dict, dry_run: bool = False) -> dict:
         total_fetched += len(envelopes)
         log.info(f"  Batch: fetched {len(envelopes)} emails, processing...")
         
+        # Add small delay after fetch for Gmail to avoid rate limits
+        if not is_davmail:
+            time.sleep(1)
+        
         # Process each email in this batch
         for env in envelopes:
             subject = env.get("subject", "")
@@ -116,6 +189,15 @@ def process_account(account: dict, dry_run: bool = False) -> dict:
                 "confidence": result.confidence,
                 "reason": result.reason,
             }
+
+            # Detect PRs and forward to gitrepo_agent
+            detected_prs = _detect_pr_from_subject(subject, sender)
+            if detected_prs:
+                detail["pr_detected"] = True
+                detail["pr_numbers"] = [p["pr_number"] for p in detected_prs]
+                # Send to gitrepo_agent (only in live mode)
+                if not dry_run:
+                    _send_pr_to_gitrepo_agent(detected_prs)
 
             if result.step == "review":
                 report["review_count"] += 1
@@ -165,6 +247,11 @@ def run_all(dry_run: bool = False, account_filter: str | None = None) -> list[di
     for acc in accounts:
         report = process_account(acc, dry_run=dry_run)
         reports.append(report)
+        
+        # Add delay between accounts to avoid Gmail rate limits.
+        # 7 Gmail accounts sharing one IP need breathing room.
+        if acc.get("provider") != "davmail":
+            time.sleep(5)
     return reports
 
 
