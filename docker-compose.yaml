@@ -46,7 +46,7 @@ services:
 
   # IAMQ sidecar — inter-agent messaging (Elixir/OTP, zero-install)
   iamq:
-    build: ./iamq
+    image: openclaw-iamq-sidecar:latest
     restart: unless-stopped
     environment:
       IAMQ_HTTP_URL: http://host.docker.internal:18790
