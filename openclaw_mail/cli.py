@@ -108,6 +108,75 @@ def digest():
     log.info(f"Digest saved to {path}")
 
 
+def calendar_add():
+    """Create a calendar event from command-line arguments.
+
+    Usage: mail-calendar-add "Meeting title" "2026-03-25 14:00" [--end "2026-03-25 15:00"]
+           [--account personal] [--description "Notes"] [--location "Room 1"]
+           [--attendees "a@example.com,b@example.com"]
+    """
+    _mq_startup()
+
+    from datetime import datetime
+
+    from openclaw_mail.calendar.core import CalendarEvent, create_event
+
+    args = sys.argv[1:]
+    if len(args) < 2:
+        print("Usage: mail-calendar-add <summary> <start> [--end <end>] [--account <id>]")
+        print('  Example: mail-calendar-add "Team sync" "2026-03-25 14:00"')
+        sys.exit(1)
+
+    summary = args[0]
+    start = datetime.fromisoformat(args[1])
+
+    # Parse optional flags
+    end = None
+    account_id = None
+    description = ""
+    location = ""
+    attendees: list[str] = []
+
+    i = 2
+    while i < len(args):
+        if args[i] == "--end" and i + 1 < len(args):
+            end = datetime.fromisoformat(args[i + 1])
+            i += 2
+        elif args[i] == "--account" and i + 1 < len(args):
+            account_id = args[i + 1]
+            i += 2
+        elif args[i] == "--description" and i + 1 < len(args):
+            description = args[i + 1]
+            i += 2
+        elif args[i] == "--location" and i + 1 < len(args):
+            location = args[i + 1]
+            i += 2
+        elif args[i] == "--attendees" and i + 1 < len(args):
+            attendees = [a.strip() for a in args[i + 1].split(",")]
+            i += 2
+        else:
+            i += 1
+
+    event = CalendarEvent(
+        summary=summary,
+        start=start,
+        end=end,
+        description=description,
+        location=location,
+        attendees=attendees,
+    )
+
+    result = create_event(event, account_id=account_id)
+
+    if result["method"] == "google_api":
+        print(f"Event created via Google Calendar: {result.get('link', result['result'])}")
+    else:
+        print(f"ICS file saved: {result['result']}")
+        print("Import this file into your calendar application.")
+
+    log.info(f"Calendar event created: {summary} ({result['method']})")
+
+
 def validate():
     """Run the validation pipeline (ADR compliance, sensitive data scan).
 
@@ -154,6 +223,9 @@ if __name__ == "__main__":
         tidy()
     elif cmd == "digest":
         digest()
+    elif cmd == "calendar-add":
+        sys.argv = sys.argv[1:]  # Shift args so calendar_add sees them correctly
+        calendar_add()
     elif cmd == "validate":
         validate()
     else:

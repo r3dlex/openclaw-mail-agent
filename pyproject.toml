@@ -25,6 +25,7 @@ google-auth-oauthlib = "^1.0"
 [tool.poetry.scripts]
 mail-tidy = "openclaw_mail.cli:tidy"
 mail-digest = "openclaw_mail.cli:digest"
+mail-calendar-add = "openclaw_mail.cli:calendar_add"
 validate = "openclaw_mail.cli:validate"
 
 [tool.pytest.ini_options]
