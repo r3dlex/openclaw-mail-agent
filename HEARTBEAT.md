@@ -18,11 +18,10 @@
 
 ## Report to User
 
-After completing recurring checks, **send a summary to the user via your messaging channel** (through OpenClaw gateway). The user cannot see IAMQ messages.
-
-- After tidy runs: report counts and any emails needing review. Example: "Tidy: 6 auto-filed, 1 review (sender: subject). Gmail recovering."
-- If nothing happened: "All inboxes clean. Nothing to report."
-- Gmail outages, DavMail timeouts, failed runs: report IMMEDIATELY, don't wait for the next heartbeat.
+Send a Telegram summary ONLY when there's something worth reporting:
+- Tidy runs completed with notable results. Example: "Tidy: 6 auto-filed, 1 needs review."
+- Gmail outages, DavMail timeouts, failed runs: report IMMEDIATELY.
+- Do NOT send a message if nothing happened. Silent heartbeats are fine.
 
 ## Notes
 

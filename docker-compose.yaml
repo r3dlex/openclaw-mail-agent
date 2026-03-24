@@ -56,6 +56,8 @@ services:
       IAMQ_AGENT_EMOJI: "\U0001F980"
       IAMQ_AGENT_DESC: "Multi-account email management and auto-filing. Runs a 4-step filtering pipeline across DavMail and Gmail accounts."
       IAMQ_AGENT_CAPABILITIES: email_tidy,email_digest,folder_management,rule_engine,email_filtering,inbox_summary
+      IAMQ_HEARTBEAT_MS: "300000"
+      IAMQ_POLL_MS: "60000"
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

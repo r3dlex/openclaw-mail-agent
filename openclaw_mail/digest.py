@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 
 from openclaw_mail.config import REPORT_DIR, get_active_accounts
-from openclaw_mail.utils.himalaya import get_envelopes
+from openclaw_mail.utils.himalaya import davmail_timeout, get_envelopes
 from openclaw_mail.utils.logging import get_logger
 
 log = get_logger("digest", "digest.log")
@@ -15,7 +15,7 @@ REVIEW_FOLDER = "Review"
 
 
 def get_folder_count(account_name: str, folder: str) -> int:
-    envelopes = get_envelopes(account_name, folder, limit=500, timeout=30)
+    envelopes = get_envelopes(account_name, folder, limit=500, timeout=davmail_timeout(30), retries=2)
     return len(envelopes)
 
 
@@ -43,7 +43,7 @@ def generate_digest() -> str:
         lines.append(f"- Review: {review_count}")
 
         if review_count > 0:
-            recent = get_envelopes(name, REVIEW_FOLDER, limit=5)
+            recent = get_envelopes(name, REVIEW_FOLDER, limit=5, timeout=davmail_timeout(30), retries=2)
             for env in recent:
                 subj = env.get("subject", "")[:50]
                 lines.append(f"  - {subj}...")
