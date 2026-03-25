@@ -84,12 +84,14 @@ def tidy():
     if total_review > 0:
         log.warning(f"{total_review} emails need manual review — check reports/last_tidy_summary.txt")
 
-    # Distribute report via inter-agent MQ
-    try:
-        from openclaw_mail.utils.mq import send_tidy_report
-        send_tidy_report(summary, full_report, reports=reports)
-    except Exception as e:
-        log.debug(f"MQ report distribution skipped: {e}")
+    # Distribute report via inter-agent MQ — only when there's actual work
+    total_processed = sum(r["total_processed"] for r in reports)
+    if total_processed > 0 or total_review > 0:
+        try:
+            from openclaw_mail.utils.mq import send_tidy_report
+            send_tidy_report(summary, full_report, reports=reports)
+        except Exception as e:
+            log.debug(f"MQ report distribution skipped: {e}")
 
 
 def digest():

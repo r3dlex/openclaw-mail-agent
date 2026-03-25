@@ -14,7 +14,7 @@
 - [x] MQ inbox — poll for messages from other agents, reply to requests
 - [x] MQ heartbeat — keep registration alive
 - [ ] Calendar — not yet implemented
-- [ ] Generate digest — last digest timed out on DavMail. Retry when DavMail is responsive.
+- [x] Generate digest — fixed (2026-03-24): get_folder_count uses limit=1 instead of limit=500. Digest completes in ~37s. Counts are 0 or 1+ (exact count unavailable on DavMail without full-folder scans).
 
 ## Report to User
 

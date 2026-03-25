@@ -15,7 +15,13 @@ REVIEW_FOLDER = "Review"
 
 
 def get_folder_count(account_name: str, folder: str) -> int:
-    envelopes = get_envelopes(account_name, folder, limit=500, timeout=davmail_timeout(30), retries=2)
+    """Get a folder count using a lightweight 1-envelope check.
+
+    Uses limit=1 to avoid DavMail timeouts on large folders.
+    Returns 0 if empty, 1+ if emails exist (exact count not available
+    without expensive full-folder scans on DavMail).
+    """
+    envelopes = get_envelopes(account_name, folder, limit=1, timeout=davmail_timeout(10), retries=1)
     return len(envelopes)
 
 
