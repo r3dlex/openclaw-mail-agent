@@ -136,6 +136,30 @@ poetry run validate                                  # ADR + secret scan
 - **Himalaya CLI** — email client abstraction (bundled in Docker image)
 - **DavMail** — Exchange/Office365 IMAP bridge (only for Exchange accounts)
 
+## Inter-Agent Message Queue (IAMQ)
+
+The mail agent participates in the OpenClaw agent swarm via the Inter-Agent
+Message Queue (IAMQ), using a dual-mode transport: HTTP polling with file-based
+fallback when the HTTP endpoint is unavailable.
+
+| Property | Value |
+|----------|-------|
+| **Agent ID** | `mail_agent` |
+| **Transport** | HTTP + file fallback |
+
+### Message Routing
+
+- **Broadcasts** tidy reports to all agents in the swarm
+- **Routes** PR-related emails (GitHub notifications, review requests) to `gitrepo_agent`
+- **Sends** detailed digest reports to `main` (the orchestrating agent)
+
+### Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `IAMQ_HTTP_URL` | HTTP endpoint for the message queue (e.g. `http://localhost:4000/api/mq`) |
+| `IAMQ_AGENT_ID` | Agent identifier on the queue (default: `mail_agent`) |
+
 ## License
 
 MIT
