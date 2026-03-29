@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/logo.svg" alt="Mail Agent logo" width="96" height="96">
+</p>
+
 # Openclaw Mail Agent
 
 Intelligent multi-account email management agent with AI-powered categorization

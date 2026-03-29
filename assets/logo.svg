@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <!-- Envelope body -->
+  <rect x="16" y="36" width="96" height="64" rx="6" fill="#1ABC9C"/>
+  <!-- Envelope flap (triangular) -->
+  <path d="M16 36 L64 72 L112 36" fill="none" stroke="#0E8C73" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
