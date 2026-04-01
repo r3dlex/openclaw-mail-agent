@@ -6,6 +6,7 @@
 
 - [DONE] RIB inbox backlog cleared (2026-03-21): Inbox went from ~2000 emails to 2. Batch processing fixed (fetches 5, processes, repeats until empty).
 - RIB Gmail Review (90+ stale): Pipeline only processes INBOX, not Review. No automated clear path yet.
+- RIB February phantom emails (2026-03-29): ~16 stuck Feb 24-25 emails in RIB INBOX that appear in `envelope list` but cannot be fetched/processed by tidy pipeline. DavMail cache issue — Exchange has them marked read, DavMail shows them as unread. `unread_only: false` doesn't help. Does not affect new email processing. Not actionable without DavMail restart.
 
 ## Recurring Checks (rotate 2-4x daily)
 
