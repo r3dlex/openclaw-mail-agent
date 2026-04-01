@@ -1,4 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200">
+  <g transform="translate(20, 10) scale(1.4)">
   <!-- Tail -->
   <polygon points="64,96 54,112 74,112" fill="#E8453C"/>
   <polygon points="64,108 58,118 70,118" fill="#D63C34"/>
@@ -38,4 +39,8 @@
   </g>
   <!-- Floating @ symbol -->
   <text x="22" y="32" font-family="Arial,sans-serif" font-size="14" font-weight="bold" fill="#1ABC9C" opacity="0.8">@</text>
+  </g>
+  <text x="230" y="75" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="22" fill="#888" font-weight="400" letter-spacing="2">OPENCLAW</text>
+  <text x="230" y="135" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="52" fill="#1ABC9C" font-weight="700">Mail</text>
+  <text x="230" y="165" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="18" fill="#999" font-weight="300">Agent</text>
 </svg>

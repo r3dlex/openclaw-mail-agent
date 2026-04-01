@@ -1,4 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <circle cx="250" cy="250" r="230" fill="#1ABC9C" opacity="0.12"/>
+  <circle cx="250" cy="250" r="230" fill="none" stroke="#1ABC9C" stroke-width="3" opacity="0.3"/>
+  <g transform="translate(70, 70) scale(2.8)">
   <!-- Tail -->
   <polygon points="64,96 54,112 74,112" fill="#E8453C"/>
   <polygon points="64,108 58,118 70,118" fill="#D63C34"/>
@@ -38,4 +41,5 @@
   </g>
   <!-- Floating @ symbol -->
   <text x="22" y="32" font-family="Arial,sans-serif" font-size="14" font-weight="bold" fill="#1ABC9C" opacity="0.8">@</text>
+  </g>
 </svg>
