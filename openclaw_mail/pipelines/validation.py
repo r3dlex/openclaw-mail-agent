@@ -85,7 +85,8 @@ class SensitiveDataStep:
                 if desc == "Email address" and rel.name in _EMAIL_ALLOWED_FILES:
                     continue
                 # Test files may contain intentional hardcoded values for testing
-                if is_test and desc != "Email address":
+                # (including fake email addresses used as fixtures)
+                if is_test:
                     continue
                 for match in re.finditer(pattern, content):
                     # Skip env-variable references (os.getenv, get_env, etc.)
