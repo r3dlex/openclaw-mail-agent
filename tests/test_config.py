@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from unittest.mock import patch
 
@@ -57,12 +56,12 @@ class TestConstants:
         assert CONFIG_DIR == PROJECT_ROOT / "config"
 
     def test_log_dir_path(self):
-        from openclaw_mail.config import LOG_DIR, PROJECT_ROOT
+        from openclaw_mail.config import LOG_DIR
         # Default is PROJECT_ROOT/logs
         assert "logs" in str(LOG_DIR)
 
     def test_report_dir_path(self):
-        from openclaw_mail.config import REPORT_DIR, PROJECT_ROOT
+        from openclaw_mail.config import REPORT_DIR
         assert "reports" in str(REPORT_DIR)
 
     def test_davmail_port_defaults(self):

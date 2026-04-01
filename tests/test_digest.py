@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -26,7 +25,6 @@ class TestGetFolderCount:
         assert count == 0
 
     def test_returns_zero_on_himalaya_error(self):
-        from openclaw_mail.utils.himalaya import HimalayaError
         # HimalayaError is falsy and has no len — get_envelopes with retries returns it
         # but in practice get_folder_count passes retries=1 so it uses himalaya_run_with_retry
         # The function just calls len() on the result, so we test the happy path
